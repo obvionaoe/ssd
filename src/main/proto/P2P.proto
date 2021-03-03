@@ -1,0 +1,32 @@
+// early sketch of p2p network
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_outer_classname = "P2P";
+
+package pt.up.fc.dcc.ssd.p2p;
+
+service AuctionToMiner {
+  rpc registerTransaction (TransactionInfo) returns (TransactionResponse) {}
+}
+
+service MinerToMiner {
+  rpc sync (TransactionInfo) returns (TransactionResponse) {}
+}
+
+service AuctionClient { // ???
+
+}
+
+message TransactionInfo {
+
+}
+
+message RegisterResponse {
+
+}
+
+message TransactionResponse {
+
+}
