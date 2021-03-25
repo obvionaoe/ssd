@@ -39,8 +39,8 @@ public class KademliaNode {
     }
 
     public static void main(String[] args) throws IOException {
-        KademliaNode node1 = new KademliaNode(50001, new Shit());
-        KademliaNode node2 = new KademliaNode(50002, new Shit());
+        KademliaNode node1 = new KademliaNode(50001, new Impl());
+        KademliaNode node2 = new KademliaNode(50002, new Impl());
 
         node1.start();
         node2.start();
@@ -50,7 +50,7 @@ public class KademliaNode {
     }
 }
 
-class Shit extends KademliaImpl {
+class Impl extends KademliaImpl {
     @Override
     public void ping(PingRequest request, StreamObserver<PingResponse> responseObserver) {
         responseObserver.onNext(PingResponse.newBuilder().build());

@@ -20,19 +20,19 @@ service Kademlia {
 // Requests
 
 message PingRequest {
-  string magicCookie
+  string magicCookie = 1;
 }
 
 message StoreRequest {
-
+  string magicCookie = 1;
 }
 
 message SearchRequest {
-
+  string magicCookie = 1;
 }
 
 message ValueRequest{
-
+  string magicCookie = 1;
 }
 
 // Responses
