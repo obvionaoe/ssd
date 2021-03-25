@@ -7,26 +7,48 @@ option java_outer_classname = "P2P";
 
 package pt.up.fc.dcc.ssd.p2p;
 
-service AuctionToMiner {
-  rpc registerTransaction (TransactionInfo) returns (TransactionResponse) {}
+service Kademlia {
+  rpc ping (PingRequest) returns (PingResponse) {}
+
+  rpc store (StoreRequest) returns (StoreResponse) {}
+
+  rpc findNode (SearchRequest) returns (SearchResponse) {}
+
+  rpc findValue (ValueRequest) returns (ValueResponse) {}
 }
 
-service MinerToMiner {
-  rpc sync (TransactionInfo) returns (TransactionResponse) {}
+// Requests
+
+message PingRequest {
+  string magicCookie
 }
 
-service AuctionClient { // ???
-
-}
-
-message TransactionInfo {
-
-}
-
-message RegisterResponse {
+message StoreRequest {
 
 }
 
-message TransactionResponse {
+message SearchRequest {
+
+}
+
+message ValueRequest{
+
+}
+
+// Responses
+
+message PingResponse {
+
+}
+
+message StoreResponse {
+
+}
+
+message SearchResponse {
+
+}
+
+message ValueResponse {
 
 }
