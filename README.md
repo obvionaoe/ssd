@@ -9,7 +9,7 @@
 * The architecture must be clearly presented, with the design choices being driven by the functional requirements(presented above). It also must present the assumptions made, namelymandated by theoretical and practical limitations.
 
 ## TODOS
-- [ ] Ler os papers
+- [ x ] Ler os papers
 - [ ] O que são ataques eclipse ?
 - [ ] DISTRIBUTED LEDGER
     - [ ] should be modular
