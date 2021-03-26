@@ -3,6 +3,23 @@ import java.security.MessageDigest;
 
 public class Utils {
 
+    public static String applySecureHash(String input){
+        try {
+            MessageDigest digest = MessageDigest.getInstance("Sha256");
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuffer hexString = new StringBuffer(); //hexadecimal hash
+            for (int i = 0; i < hash.length; i++) {
+                String hex = Integer.toHexString(0xff & hash[i]);
+                if(hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        }
+        catch(Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static String getMerkleRoot(ArrayList<Transaction> transactions) {
         int count = transactions.size();
 
@@ -15,7 +32,7 @@ public class Utils {
         while(count > 1) {
             treeLayer = new ArrayList<String>();
             for(int i=1; i < previousTreeLayer.size(); i+=2) {
-                treeLayer.add(applySha256(previousTreeLayer.get(i-1) + previousTreeLayer.get(i)));
+                treeLayer.add(applySecureHash(previousTreeLayer.get(i-1) + previousTreeLayer.get(i)));
             }
             count = treeLayer.size();
             previousTreeLayer = treeLayer;
@@ -25,11 +42,8 @@ public class Utils {
         return merkleRoot;
     }
 
-    public static String zeros(int length) {
-        StringBuilder builder = new StringBuilder();
-
-        for (int i = 0; i < length; i++) { builder.append('0'); } return builder.toString();
+    public static String getDifficultyString(int difficulty) {
+        return new String(new char[difficulty]).replace('\0', '0');
     }
-
 
 }

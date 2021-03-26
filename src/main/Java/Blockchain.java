@@ -1,117 +1,77 @@
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class Blockchain {
 
-    public static List<Block> blocks;
+    public static ArrayList<Block> Blockchain;
     public int DIFFICULTY = 1;
 
 
-    public Blockchain(int DIFFICULTY){
-        this.DIFFICULTY = DIFFICULTY;
-        blocks = new ArrayList<>();
-
-        Block a = new Block(0, System.currentTimeMillis(), null, "Genesis");
-        a.mineBlock(DIFFICULTY);
-        blocks.add(a);
+    public Blockchain(){
+        this.Blockchain= new ArrayList<Block>();
+        //this.blockchain = new ArrayList<>();
     }
 
-
-    //CREATE
-    public Block newBlock(String data) {
-        Block latestBlock = latestBlock();
-        return new Block(latestBlock.getIndex() + 1, System.currentTimeMillis(),
-                latestBlock.getHash(), data);
-    }
+    //imprimir a blockchain
 
     //ADD e MINING
-    public void addBlock(Block a) {
-        if (a != null) {
-            a.mineBlock(DIFFICULTY);
-            blocks.add(a);
+    public void addBlock(Block newBlock ) {
+        if (newBlock != null) {
+            newBlock.mineBlock(DIFFICULTY);
+            Blockchain.add(newBlock);
         }
     }
 
     //LAST
-    public Block latestBlock() {
-        return blocks.get(blocks.size() - 1);
+    public Block lastBlock() {
+        return Blockchain.get(Blockchain.size() - 1);
     }
 
-    //Validate genesis block
-    public boolean isGenesisValid() {
-        Block Genesis = blocks.get(0);
+    public Boolean isChainValid() {
+        Block currentBlock;
+        Block previousBlock;
+        String candidateBlock = new String(new char[difficulty]).replace('\0', '0');
 
-        if (Genesis.getIndex() != 0) {
-            return false;
+        for(int i=1; i < Blockchain.size(); i++) {
+
+            currentBlock = Blockchain.get(i);
+            previousBlock = Blockchain.get(i-1);
+            //compare registered hash and calculated hash:
+            if(!currentBlock.hash.equals(currentBlock.calculateHash()) ){
+                System.out.println("Current Hashes are not equal, the current transaction's data has been altered");
+                return false;
+            }
+            //compare previous hash and registered previous hash
+            if(!previousBlock.hash.equals(currentBlock.previousHash) ) {
+                System.out.println("Previous Hashes are not equal, the previous transaction's data has been altered");
+                return false;
+            }
+            //check if hash is solved
+            if(!currentBlock.hash.substring( 0, difficulty).equals(candidateBlock)) {
+                System.out.println("This block hasn't been mined");
+                return false;
+            }
         }
-
-        if (Genesis.getPreviousHash() != null) {
-            return false;
-        }
-
-        if (Genesis.getHash() == null ||
-                !Block.calculateHash(Genesis).equals(Genesis.getHash())) {
-            return false;
-        }
-
+        System.out.println("Blockchain is valid");
+        System.out.println("Printing the blockchain...");
+        String blockchainJson = new GsonBuilder().setPrettyPrinting().create().toJson(blockchain);
         return true;
     }
 
-
-    public boolean isValidNewBlock(Block newBlock, Block previousBlock) {
-        if (newBlock != null  &&  previousBlock != null) {
-            if (previousBlock.getIndex() + 1 != newBlock.getIndex()) {
-                return false;
-            }
-
-            if (newBlock.getPreviousHash() == null  ||
-                    !newBlock.getPreviousHash().equals(previousBlock.getHash())) {
-                return false;
-            }
-
-            if (newBlock.getHash() == null  ||
-                    !Block.calculateHash(newBlock).equals(newBlock.getHash())) {
-                return false;
-            }
-
-            return true;
+    //Creates a JSON representation of blockchain and prints it to a file.
+    public String toJson() {
+        String blockchainJson = new GsonBuilder().setPrettyPrinting().create().toJson(Blockchain);
+        try {
+            FileWriter jsonFile = new FileWriter("blockchain.json");
+            jsonFile.write(blockchainJson);
+            jsonFile.close();
+        } catch (IOException e) {
+            System.err.println("Error: Cannot write blockchain to JSON");
         }
-
-        return false;
+        return blockchainJson;
     }
-
-
-    public boolean isBlockChainValid() {
-        if (!isGenesisValid()) {
-            return false;
-        }
-
-        for (int i = 1; i < blocks.size(); i++) {
-            Block currentBlock = blocks.get(i);
-            Block previousBlock = blocks.get(i - 1);
-
-            if (!isValidNewBlock(currentBlock, previousBlock)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-
-        for (Block block : blocks) {
-            builder.append(block).append("\n");
-        }
-
-        return builder.toString();
-    }
-
-
-
 
 
 
