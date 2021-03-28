@@ -50,7 +50,7 @@ public class KademliaNode {
     }
 }
 
-class Impl extends KademliaImpl {
+public class Impl extends KademliaImpl {
     @Override
     public void ping(PingRequest request, StreamObserver<PingResponse> responseObserver) {
         responseObserver.onNext(PingResponse.newBuilder().build());

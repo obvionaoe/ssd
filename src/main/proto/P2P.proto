@@ -33,7 +33,14 @@ message SearchRequest {
 
 message ValueRequest{
   string magicCookie = 1;
+  // auction
+  string topic = 2;
+  string role = 3;
+  string bid = 4;
+  string nodeId = 5;
 }
+
+
 
 // Responses
 
