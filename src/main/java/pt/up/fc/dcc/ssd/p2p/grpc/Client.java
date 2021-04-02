@@ -3,7 +3,6 @@ import io.grpc.Channel;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import p2p.*;
-import pt.up.fc.dcc.ssd.p2p.node.
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -59,13 +58,11 @@ public class Client {
 
         String bid = args[2];
 
-        // TODO make new node
         ClientNode clientNode = new ClientNode(50001, new ClientImpl(), operation, topic, bid);
 
         // TODO make transaction for who has the topic in the network
+        clientNode.start();
         clientNode.makeTransaction();
 
     }
-
-    // TODO extend Luh Kademlia
 }
