@@ -5,7 +5,7 @@ syntax = "proto3";
 option java_multiple_files = true;
 option java_outer_classname = "P2P";
 
-package pt.up.fc.dcc.ssd.p2p;
+package pt.up.fc.dcc.ssd.p2p.grpc;
 
 service Kademlia {
   rpc ping (PingRequest) returns (PingResponse) {}
@@ -25,6 +25,7 @@ message PingRequest {
 
 message StoreRequest {
   string magicCookie = 1;
+  repeated string visitedNodeIds = 2;
 }
 
 message SearchRequest {
@@ -38,17 +39,17 @@ message ValueRequest{
 // Responses
 
 message PingResponse {
-
+  string magicCookie = 1;
 }
 
 message StoreResponse {
-
+  string magicCookie = 1;
 }
 
 message SearchResponse {
-
+  string magicCookie = 1;
 }
 
 message ValueResponse {
-
+  string magicCookie = 1;
 }

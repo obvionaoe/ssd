@@ -1,9 +1,7 @@
 package pt.up.fc.dcc.ssd.p2p.grpc;
 
 import io.grpc.stub.StreamObserver;
-import pt.up.fc.dcc.ssd.p2p.KademliaGrpc;
-import pt.up.fc.dcc.ssd.p2p.PingRequest;
-import pt.up.fc.dcc.ssd.p2p.PingResponse;
+import pt.up.fc.dcc.ssd.p2p.*;
 
 public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
     @Override
@@ -11,5 +9,18 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         super.ping(request, responseObserver);
     }
 
+    @Override
+    public void store(StoreRequest request, StreamObserver<StoreResponse> responseObserver) {
+        super.store(request, responseObserver);
+    }
 
+    @Override
+    public void findNode(SearchRequest request, StreamObserver<SearchResponse> responseObserver) {
+        super.findNode(request, responseObserver);
+    }
+
+    @Override
+    public void findValue(ValueRequest request, StreamObserver<ValueResponse> responseObserver) {
+        super.findValue(request, responseObserver);
+    }
 }
