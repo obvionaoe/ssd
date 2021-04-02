@@ -8,6 +8,8 @@ option java_outer_classname = "P2P";
 package pt.up.fc.dcc.ssd.p2p.grpc;
 
 service Kademlia {
+  rpc bootstrap (BootstrapRequest) returns (BootstrapResponse) {}
+
   rpc ping (PingRequest) returns (PingResponse) {}
 
   rpc store (StoreRequest) returns (StoreResponse) {}
@@ -18,6 +20,9 @@ service Kademlia {
 }
 
 // Requests
+message BootstrapRequest {
+
+}
 
 message PingRequest {
   string magicCookie = 1;
@@ -37,9 +42,13 @@ message ValueRequest{
 }
 
 // Responses
+message BootstrapResponse {
+
+}
 
 message PingResponse {
   string magicCookie = 1;
+  bool alive = 2;
 }
 
 message StoreResponse {

@@ -1,5 +1,6 @@
 package pt.up.fc.dcc.ssd.p2p.rt;
 
+import pt.up.fc.dcc.ssd.p2p.Config;
 import pt.up.fc.dcc.ssd.p2p.node.ID;
 
 import java.util.ArrayList;
@@ -12,7 +13,7 @@ public class KBucket {
 
     public KBucket(ID id) {
         this.id = id;
-        this.nodeIds = new ArrayList<>();
+        this.nodeIds = new ArrayList<>(Config.MAX_BUCKET_SIZE);
         this.nodeMap = new HashMap<>();
     }
 }

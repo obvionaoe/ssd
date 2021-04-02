@@ -8,4 +8,12 @@ public class ConnectionInfo {
         this.addr = addr;
         this.port = port;
     }
+
+    public String getAddr() {
+        return addr;
+    }
+
+    public int getPort() {
+        return port;
+    }
 }
