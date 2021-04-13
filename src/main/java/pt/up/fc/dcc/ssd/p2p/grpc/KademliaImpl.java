@@ -1,7 +1,6 @@
 package pt.up.fc.dcc.ssd.p2p.grpc;
 
 import io.grpc.stub.StreamObserver;
-import pt.up.fc.dcc.ssd.p2p.*;
 
 public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
     @Override
@@ -15,7 +14,7 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
     }
 
     @Override
-    public void findNode(SearchRequest request, StreamObserver<SearchResponse> responseObserver) {
+    public void findNode(FindNodeRequest request, StreamObserver<FindNodeResponse> responseObserver) {
         super.findNode(request, responseObserver);
     }
 

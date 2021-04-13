@@ -1,38 +1,37 @@
 package pt.up.fc.dcc.ssd.p2p.node;
 
-import pt.up.fc.dcc.ssd.p2p.Config;
-
+import javax.annotation.Nonnull;
 import javax.xml.bind.DatatypeConverter;
 import java.util.BitSet;
+import java.util.Objects;
 import java.util.stream.IntStream;
+
+import static pt.up.fc.dcc.ssd.p2p.Config.ID_N_BITS;
 
 public class ID extends BitSet {
     /**
      * Generates a random KademliaNode ID
      */
     public ID() {
-        super(Config.ID_N_BITS);
-        for (int i = 0; i < Config.ID_N_BITS; i++) {
+        super(ID_N_BITS);
+        for (int i = 0; i < ID_N_BITS; i++) {
             if (Math.random() > 0.5) {
                 this.flip(i);
             }
         }
     }
 
-    public ID(boolean flag) {
-        super(8);
-        this.set(0, false);
-        this.set(1, true);
-        this.set(2, false);
-        this.set(3, true);
+    public ID(String s) {
+        super(ID_N_BITS);
+
+        for (int i = 0; i < ID_N_BITS; i++) {
+            if (s.charAt(i) == '1')
+                this.set(i);
+        }
     }
 
-    public ID(int flag) {
-        super(8);
-        this.set(0, true);
-        this.set(1, false);
-        this.set(2, true);
-        this.set(3, true);
+    public static ID fromString(String s) {
+        return new ID(s);
     }
 
     public long toLong() {
@@ -49,15 +48,33 @@ public class ID extends BitSet {
     }
 
     public String toBinaryString() {
-        final StringBuilder buffer = new StringBuilder(Config.ID_N_BITS);
-        buffer.append("LSB ");
-        IntStream.range(0, Config.ID_N_BITS).mapToObj(i -> get(i) ? '1' : '0').forEach(buffer::append);
-        buffer.append(" MSB");
+        final StringBuilder buffer = new StringBuilder(ID_N_BITS);
+        IntStream.range(0, ID_N_BITS).mapToObj(i -> get(i) ? '1' : '0').forEach(buffer::append);
         return buffer.toString();
     }
 
     @Override
     public String toString() {
-        return DatatypeConverter.printHexBinary(this.toByteArray());
+        return DatatypeConverter.printHexBinary(super.toByteArray());
+    }
+
+    @Nonnull
+    @Override
+    public byte[] toByteArray() {
+        byte[] bytes = new byte[this.length() / 8 + 1];
+        for (int i = 0; i < this.length(); i++) {
+            if (this.get(i)) {
+                bytes[bytes.length - i / 8 - 1] |= 1 << (i % 8);
+            }
+        }
+        return bytes;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ID that = (ID) o;
+        return Objects.equals(this.toString(), that.toString());
     }
 }

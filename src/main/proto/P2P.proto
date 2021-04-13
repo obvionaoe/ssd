@@ -1,5 +1,3 @@
-// early sketch of p2p network
-
 syntax = "proto3";
 
 option java_multiple_files = true;
@@ -8,57 +6,89 @@ option java_outer_classname = "P2P";
 package pt.up.fc.dcc.ssd.p2p.grpc;
 
 service Kademlia {
-  rpc bootstrap (BootstrapRequest) returns (BootstrapResponse) {}
-
   rpc ping (PingRequest) returns (PingResponse) {}
 
   rpc store (StoreRequest) returns (StoreResponse) {}
 
-  rpc findNode (SearchRequest) returns (SearchResponse) {}
+  rpc findNode (FindNodeRequest) returns (FindNodeResponse) {}
 
   rpc findValue (ValueRequest) returns (ValueResponse) {}
+
+  rpc leave (LeaveRequest) returns (LeaveResponse) {} //?
+
+  rpc gossip (StoreRequest) returns (StoreResponse) {} //?
 }
 
 // Requests
 message BootstrapRequest {
-
+  GrpcConnectionInfo connectionInfo = 1;
 }
 
 message PingRequest {
-  string magicCookie = 1;
+  GrpcConnectionInfo connectionInfo = 1;
 }
 
 message StoreRequest {
-  string magicCookie = 1;
+  GrpcConnectionInfo connectionInfo = 1;
+  Data data = 3;
+}
+
+message FindNodeRequest {
+  string destId = 1;
+  GrpcConnectionInfo connectionInfo = 2;
+}
+
+message ValueRequest {
+  string key = 1;
+  GrpcConnectionInfo connectionInfo = 2;
+}
+
+message LeaveRequest {
+  string id = 1;
+}
+
+message GossipRequest {
+  GrpcConnectionInfo connectionInfo = 1;
   repeated string visitedNodeIds = 2;
-}
-
-message SearchRequest {
-  string magicCookie = 1;
-}
-
-message ValueRequest{
-  string magicCookie = 1;
+  Data data = 3;
 }
 
 // Responses
 message BootstrapResponse {
-
+  repeated GrpcConnectionInfo connectionInfos = 1;
 }
 
 message PingResponse {
-  string magicCookie = 1;
-  bool alive = 2;
+  bool alive = 1;
 }
 
 message StoreResponse {
-  string magicCookie = 1;
+
 }
 
-message SearchResponse {
-  string magicCookie = 1;
+message FindNodeResponse {
+  repeated GrpcConnectionInfo connectionInfo = 1;
+  bool found = 2;
 }
 
 message ValueResponse {
-  string magicCookie = 1;
+
+}
+
+message LeaveResponse {
+
+}
+
+// Internal Messages
+
+message GrpcConnectionInfo {
+  string id = 1;
+  string address = 2;
+  int32 port = 3;
+  string distance = 4;
+}
+
+message Data {
+  string key = 1;
+  bytes value = 2;
 }
