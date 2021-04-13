@@ -1,16 +1,20 @@
 package pt.up.fc.dcc.ssd.p2p.node;
 
+import com.google.rpc.Code;
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.grpc.*;
 import pt.up.fc.dcc.ssd.p2p.grpc.KademliaGrpc.KademliaBlockingStub;
+import pt.up.fc.dcc.ssd.p2p.node.exceptions.KademliaNodeBuilderException;
+import pt.up.fc.dcc.ssd.p2p.node.util.NodeType;
 import pt.up.fc.dcc.ssd.p2p.node.util.ValidationUtils;
 import pt.up.fc.dcc.ssd.p2p.table.RoutingTable;
 import pt.up.fc.dcc.ssd.p2p.table.exceptions.RoutingTableException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -42,8 +46,8 @@ public class KademliaNode {
         // Add timer for routing table management pings
     }
 
-    public static KademliaNodeBuilder newBuilder() {
-        return new KademliaNodeBuilder();
+    public static Builder newBuilder() {
+        return new Builder();
     }
 
     public void start() throws IOException {
@@ -96,8 +100,6 @@ public class KademliaNode {
                         .build()
         );
 
-        System.out.println(this.id);
-        System.out.println(id);
         routingTable.update(id, new ConnectionInfo(id, address, port));
 
         FindNodeRequest request = FindNodeRequest
@@ -116,8 +118,8 @@ public class KademliaNode {
         // so it will automatically be the closest node as distance(closest, dest) = 0
         // that means it will be the first node in our sorted list of connection information
         try {
+            // TODO: catch exception if it isn't in the routing table
             ConnectionInfo connectionInfo = routingTable.findClosest(id).get(0);
-            System.out.println(connectionInfo);
 
             KademliaBlockingStub stub = KademliaGrpc.newBlockingStub(
                     ManagedChannelBuilder
@@ -140,10 +142,10 @@ public class KademliaNode {
 
                 return alive;
             } catch (StatusRuntimeException e) {
-                if (e.getStatus() == Status.UNAVAILABLE) {
+                if (e.getStatus().getCode().toString().equals(Code.UNAVAILABLE.toString())) {
                     logger.warning("Node with id " + id + " is not online");
                 } else {
-                    logger.warning(e.getMessage());
+                    logger.warning(e.getMessage() + e.getStatus().getCode());
                 }
 
                 return false;
@@ -152,11 +154,6 @@ public class KademliaNode {
             logger.warning(e.getMessage());
             return false;
         }
-    }
-
-    // WIP
-    public boolean findNode(ID id) {
-        return false;
     }
 
     private boolean addResultsAndPing(List<ConnectionInfo> connectionInfos) {
@@ -171,9 +168,41 @@ public class KademliaNode {
         return result[0];
     }
 
+    // WIP
+    public boolean findNode(ID id) {
+        try {
+            List<ConnectionInfo> connectionInfos = routingTable.findClosest(id);
+
+            for (ConnectionInfo info : connectionInfos) {
+
+            }
+
+        } catch (RoutingTableException e) {
+            logger.warning(e.getMessage());
+            return false;
+        }
+        return false;
+    }
+
+    // WIP
+    public boolean findValue(ID id) {
+        return false;
+    }
+
+    // WIP
+    public boolean store(ID id, byte[] byteArray) {
+        return false;
+    }
+
+    // WIP
+    public boolean gossip(byte[] byteArray) {
+        return false;
+    }
+
     /**
      * Kademlia RPC implementation
      */
+    // TODO: make everything async
     private class Impl extends KademliaGrpc.KademliaImplBase {
 
         @Override
@@ -246,6 +275,54 @@ public class KademliaNode {
         @Override
         public void gossip(StoreRequest request, StreamObserver<StoreResponse> responseObserver) {
             super.gossip(request, responseObserver);
+        }
+    }
+
+    public static final class Builder {
+        private ID id = new ID();
+        private int port = 0;
+        private String address = "localhost";
+        private NodeType type = NodeType.NODE;
+        private final ArrayList<KademliaImpl> implementations = new ArrayList<>();
+
+        public Builder id(ID id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder port(int port) {
+            this.port = port;
+            return this;
+        }
+
+        public Builder address(String address) {
+            this.address = address;
+            return this;
+        }
+
+        public Builder addService(KademliaImpl kademliaImpl) {
+            implementations.add(kademliaImpl);
+            return this;
+        }
+
+        public Builder addServices(KademliaImpl... kademliaImpl) {
+            implementations.addAll(Arrays.asList(kademliaImpl));
+            return this;
+        }
+
+        public Builder type(NodeType type) {
+            this.type = type;
+            return this;
+        }
+
+        public KademliaNode build() throws KademliaNodeBuilderException {
+            switch (type) {
+                case BOOTSTRAP_NODE:
+                    return new KademliaNode(BOOTSTRAP_NODE_ID, BOOTSTRAP_NODE_ADDR, BOOTSTRAP_NODE_PORT, implementations);
+                case NODE:
+                default:
+                    return new KademliaNode(id, address, port, implementations);
+            }
         }
     }
 }

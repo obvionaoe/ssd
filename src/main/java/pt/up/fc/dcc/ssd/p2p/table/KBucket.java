@@ -11,6 +11,7 @@ import java.util.HashMap;
 import static pt.up.fc.dcc.ssd.p2p.Config.MAX_BUCKET_SIZE;
 import static pt.up.fc.dcc.ssd.p2p.Config.MAX_DISTANCE;
 
+// TODO: implement replacement cache
 public class KBucket {
     private final ArrayList<ID> nodeIds;
     private final HashMap<ID, ConnectionInfo> nodeMap;

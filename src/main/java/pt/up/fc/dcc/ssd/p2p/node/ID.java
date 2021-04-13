@@ -72,9 +72,6 @@ public class ID extends BitSet {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ID that = (ID) o;
-        return Objects.equals(this.toString(), that.toString());
+        return super.equals(o);
     }
 }

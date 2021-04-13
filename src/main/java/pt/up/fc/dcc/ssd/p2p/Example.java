@@ -11,13 +11,16 @@ import static java.lang.Thread.sleep;
 
 public class Example {
     public static void main(String[] args) throws IOException, KademliaNodeBuilderException, InterruptedException {
-        System.out.println("Node Example:\n");
+        System.out.println("KademliaNode Example:\n");
 
+        // by giving this node the BOOTSTRAP_NODE type we give him a specific ID
+        // and connection info that all other nodes know
         KademliaNode bootstrapNode = KademliaNode
                 .newBuilder()
                 .type(NodeType.BOOTSTRAP_NODE)
                 .build();
 
+        // these are all just normal
         KademliaNode node1 = KademliaNode
                 .newBuilder()
                 .id(ID.fromString("01100010"))
@@ -30,6 +33,7 @@ public class Example {
                 .newBuilder()
                 .id(ID.fromString("01111011"))
                 .build();
+
 
         System.out.println("Bootstrap Node:");
         System.out.println("ID (Hex): " + bootstrapNode.getId());
@@ -64,12 +68,8 @@ public class Example {
 
         // bootstrap the nodes
         System.out.println("Node1 bootstrapped? " + node1.bootstrap());
-        System.out.println("Node1 - RoutingTable: " + node1.routingTable.toString());
         System.out.println("Node2 bootstrapped? " + node2.bootstrap());
-        System.out.println("Node2 - RoutingTable: " + node2.routingTable.toString());
         System.out.println("Node3 bootstrapped? " + node3.bootstrap());
-        System.out.println("Node3 - RoutingTable: " + node3.routingTable.toString());
-        System.out.println("Bootstrap Node - RoutingTable: " + bootstrapNode.routingTable.toString());
 
         System.out.println("Node2: Is node1 alive? " + node2.ping(node1.getId()));
         System.out.println("Node1: Is node2 alive? " + node1.ping(node2.getId()));
