@@ -2,7 +2,6 @@ package pt.up.fc.dcc.ssd.p2p;
 
 import pt.up.fc.dcc.ssd.p2p.node.ID;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
-import pt.up.fc.dcc.ssd.p2p.node.exceptions.KademliaNodeBuilderException;
 import pt.up.fc.dcc.ssd.p2p.node.util.NodeType;
 
 import java.io.IOException;
@@ -10,7 +9,7 @@ import java.io.IOException;
 import static java.lang.Thread.sleep;
 
 public class Example {
-    public static void main(String[] args) throws IOException, KademliaNodeBuilderException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("KademliaNode Example:\n");
 
         // by giving this node the BOOTSTRAP_NODE type we give him a specific ID
@@ -33,7 +32,6 @@ public class Example {
                 .newBuilder()
                 .id(ID.fromString("01111011"))
                 .build();
-
 
         System.out.println("Bootstrap Node:");
         System.out.println("ID (Hex): " + bootstrapNode.getId());

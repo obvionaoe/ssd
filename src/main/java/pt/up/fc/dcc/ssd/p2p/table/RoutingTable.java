@@ -1,6 +1,7 @@
 package pt.up.fc.dcc.ssd.p2p.table;
 
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
+import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.node.ID;
 import pt.up.fc.dcc.ssd.p2p.table.exceptions.InvalidDistanceException;
 import pt.up.fc.dcc.ssd.p2p.table.exceptions.RoutingTableException;
@@ -9,6 +10,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static pt.up.fc.dcc.ssd.p2p.Config.ID_N_BITS;
@@ -31,13 +33,15 @@ public class RoutingTable {
 
     public boolean update(ID id, ConnectionInfo connectionInfo) {
         try {
-            if (connectionInfo.getDistance() == null)
-                connectionInfo.setDistance(distance(nodeId, id));
             return buckets.get(findBucket(id)).update(id, connectionInfo);
-        } catch (RoutingTableException | InvalidDistanceException e) {
+        } catch (RoutingTableException e) {
             logger.warning(e.getMessage());
             return false;
         }
+    }
+
+    public void update(List<DistancedConnectionInfo> infos) {
+        infos.forEach(info -> update(info.getId(), info.getConnectionInfo()));
     }
 
     public void remove(ID id) throws RoutingTableException {
@@ -47,6 +51,7 @@ public class RoutingTable {
     public static BigInteger distance(ID x, ID y) throws InvalidDistanceException {
         return KBucket.distance(x, y);
     }
+
 
     private int findBucket(ID destId) throws RoutingTableException {
         BigInteger distance;
@@ -72,6 +77,7 @@ public class RoutingTable {
         return i;
     }
 
+    // Is this needed? might be slower than other methods
     public boolean contains(ID id) {
         try {
             return buckets.get(findBucket(id)).contains(id);
@@ -80,22 +86,32 @@ public class RoutingTable {
         }
     }
 
-    public ArrayList<ConnectionInfo> findClosest(ID destId) throws RoutingTableException {
-        int bucketPos = findBucket(destId);
-        ArrayList<ConnectionInfo> connectionInfos = new ArrayList<>(buckets.get(bucketPos).get(destId));
-        // is this the correct way?
+    // TODO: functions should return List and not ArrayList
+    /**
+     * This function peruses the routing table until it has found k closest nodes to id,
+     * (k={@value pt.up.fc.dcc.ssd.p2p.Config#MAX_BUCKET_SIZE}) or reached the end of the table.
+     * The list will be empty if the routing table is empty
+     *
+     * @param id the ID the routing table wants to find
+     * @return a list of connection infos, if the node is present in the routing table,
+     * it will be the first element of that list
+     */
+    public ArrayList<DistancedConnectionInfo> findClosest(ID id) throws RoutingTableException {
+        int bucketPos = findBucket(id);
+        ArrayList<DistancedConnectionInfo> connectionInfos = new ArrayList<>(buckets.get(bucketPos).get(id));
+        // is this the correct way? No, but works for small networks and for the current state of affairs
         for (int i = 0; connectionInfos.size() < MAX_BUCKET_SIZE
                 && ((bucketPos + i) < ID_N_BITS || (bucketPos - i) >= 0); i++) {
             if (bucketPos - i >= 0) {
-                connectionInfos.addAll(buckets.get(bucketPos - i).get(destId));
+                connectionInfos.addAll(buckets.get(bucketPos - i).get(id));
             }
 
             if (bucketPos + i < ID_N_BITS) {
-                connectionInfos.addAll(buckets.get(bucketPos + i).get(destId));
+                connectionInfos.addAll(buckets.get(bucketPos + i).get(id));
             }
         }
 
-        connectionInfos.sort(Comparator.comparing(ConnectionInfo::getDistance));
+        connectionInfos.sort(Comparator.comparing(DistancedConnectionInfo::getDistance));
 
         if (connectionInfos.size() > MAX_BUCKET_SIZE) {
             connectionInfos.subList(MAX_BUCKET_SIZE, connectionInfos.size()).clear();

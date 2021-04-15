@@ -67,8 +67,7 @@ message StoreResponse {
 }
 
 message FindNodeResponse {
-  repeated GrpcConnectionInfo connectionInfo = 1;
-  bool found = 2;
+  repeated GrpcConnectionInfo connectionInfos = 1;
 }
 
 message ValueResponse {
@@ -76,7 +75,7 @@ message ValueResponse {
 }
 
 message LeaveResponse {
-
+  bool received = 1;
 }
 
 // Internal Messages
