@@ -1,10 +1,11 @@
-package pt.up.fc.dcc.ssd.p2p.table;
+package pt.up.fc.dcc.ssd.p2p.routing;
 
+import pt.up.fc.dcc.ssd.p2p.common.Config;
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.node.ID;
-import pt.up.fc.dcc.ssd.p2p.table.exceptions.InvalidDistanceException;
-import pt.up.fc.dcc.ssd.p2p.table.exceptions.RoutingTableException;
+import pt.up.fc.dcc.ssd.p2p.routing.exceptions.InvalidDistanceException;
+import pt.up.fc.dcc.ssd.p2p.routing.exceptions.RoutingTableException;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -13,15 +14,16 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static pt.up.fc.dcc.ssd.p2p.Config.ID_N_BITS;
-import static pt.up.fc.dcc.ssd.p2p.Config.MAX_BUCKET_SIZE;
+import static pt.up.fc.dcc.ssd.p2p.common.Config.ID_N_BITS;
+import static pt.up.fc.dcc.ssd.p2p.common.Config.MAX_BUCKET_SIZE;
 
 // is this a tree? I dont think so my dude
+// FIXME: duplicate nodes appearing in routing table sigh
 public class RoutingTable {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     private final ID nodeId;
-    private final ArrayList<KBucket> buckets;
+    private final List<KBucket> buckets;
 
     public RoutingTable(ID nodeId) {
         this.nodeId = nodeId;
@@ -31,17 +33,21 @@ public class RoutingTable {
         }
     }
 
-    public boolean update(ID id, ConnectionInfo connectionInfo) {
+    public boolean update(ID destinationId, ConnectionInfo connectionInfo) {
         try {
-            return buckets.get(findBucket(id)).update(id, connectionInfo);
+            return buckets.get(findBucket(destinationId)).update(destinationId, connectionInfo);
         } catch (RoutingTableException e) {
             logger.warning(e.getMessage());
             return false;
         }
     }
 
+    public boolean update(DistancedConnectionInfo info) {
+        return update(info.getId(), info.getConnectionInfo());
+    }
+
     public void update(List<DistancedConnectionInfo> infos) {
-        infos.forEach(info -> update(info.getId(), info.getConnectionInfo()));
+        infos.forEach(this::update);
     }
 
     public void remove(ID id) throws RoutingTableException {
@@ -53,13 +59,13 @@ public class RoutingTable {
     }
 
 
-    private int findBucket(ID destId) throws RoutingTableException {
+    private int findBucket(ID destinationId) throws RoutingTableException {
         BigInteger distance;
 
-        if (nodeId.toString().equals(destId.toString())) throw new RoutingTableException("A node can't call itself");
+        if (nodeId.toString().equals(destinationId.toString())) throw new RoutingTableException("A node can't call itself");
 
         try {
-            distance = distance(nodeId, destId);
+            distance = distance(nodeId, destinationId);
         } catch (InvalidDistanceException e) {
             throw new RoutingTableException("Invalid distance", e.getCause());
         }
@@ -86,19 +92,18 @@ public class RoutingTable {
         }
     }
 
-    // TODO: functions should return List and not ArrayList
     /**
      * This function peruses the routing table until it has found k closest nodes to id,
-     * (k={@value pt.up.fc.dcc.ssd.p2p.Config#MAX_BUCKET_SIZE}) or reached the end of the table.
+     * (k={@value Config#MAX_BUCKET_SIZE}) or reached the end of the table.
      * The list will be empty if the routing table is empty
      *
      * @param id the ID the routing table wants to find
      * @return a list of connection infos, if the node is present in the routing table,
      * it will be the first element of that list
      */
-    public ArrayList<DistancedConnectionInfo> findClosest(ID id) throws RoutingTableException {
+    public List<DistancedConnectionInfo> findClosest(ID id) throws RoutingTableException {
         int bucketPos = findBucket(id);
-        ArrayList<DistancedConnectionInfo> connectionInfos = new ArrayList<>(buckets.get(bucketPos).get(id));
+        List<DistancedConnectionInfo> connectionInfos = new ArrayList<>(buckets.get(bucketPos).get(id));
         // is this the correct way? No, but works for small networks and for the current state of affairs
         for (int i = 0; connectionInfos.size() < MAX_BUCKET_SIZE
                 && ((bucketPos + i) < ID_N_BITS || (bucketPos - i) >= 0); i++) {

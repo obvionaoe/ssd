@@ -3,15 +3,15 @@ package pt.up.fc.dcc.ssd.p2p.node;
 import javax.annotation.Nonnull;
 import javax.xml.bind.DatatypeConverter;
 import java.util.BitSet;
-import java.util.Objects;
 import java.util.stream.IntStream;
 
-import static pt.up.fc.dcc.ssd.p2p.Config.ID_N_BITS;
+import static pt.up.fc.dcc.ssd.p2p.common.Config.ID_N_BITS;
 
 public class ID extends BitSet {
     /**
      * Generates a random KademliaNode ID
      */
+    // TODO: make ID from hash function
     public ID() {
         super(ID_N_BITS);
         for (int i = 0; i < ID_N_BITS; i++) {
@@ -21,7 +21,7 @@ public class ID extends BitSet {
         }
     }
 
-    public ID(String s) {
+    private ID(String s) {
         super(ID_N_BITS);
 
         for (int i = 0; i < ID_N_BITS; i++) {
@@ -30,7 +30,9 @@ public class ID extends BitSet {
         }
     }
 
-    public static ID fromString(String s) {
+
+
+    public static ID fromBinaryString(String s) {
         return new ID(s);
     }
 

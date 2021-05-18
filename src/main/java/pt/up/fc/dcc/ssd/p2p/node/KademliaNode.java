@@ -1,16 +1,16 @@
 package pt.up.fc.dcc.ssd.p2p.node;
 
 import com.google.rpc.Code;
-import io.grpc.*;
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+import pt.up.fc.dcc.ssd.p2p.common.Config;
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.grpc.*;
-import pt.up.fc.dcc.ssd.p2p.grpc.KademliaGrpc.KademliaBlockingStub;
-import pt.up.fc.dcc.ssd.p2p.node.util.NodeType;
-import pt.up.fc.dcc.ssd.p2p.node.util.ValidationUtils;
-import pt.up.fc.dcc.ssd.p2p.table.RoutingTable;
-import pt.up.fc.dcc.ssd.p2p.table.exceptions.RoutingTableException;
+import pt.up.fc.dcc.ssd.p2p.routing.RoutingTable;
+import pt.up.fc.dcc.ssd.p2p.routing.exceptions.RoutingTableException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,11 +19,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
-import static pt.up.fc.dcc.ssd.p2p.Config.*;
+import static pt.up.fc.dcc.ssd.p2p.common.Config.*;
+import static pt.up.fc.dcc.ssd.p2p.common.util.Utils.isNull;
+import static pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo.fromGrpcConnectionInfo;
+import static pt.up.fc.dcc.ssd.p2p.grpc.Status.*;
+import static pt.up.fc.dcc.ssd.p2p.grpc.util.RpcCall.rpc;
+import static pt.up.fc.dcc.ssd.p2p.grpc.util.RpcType.*;
+import static pt.up.fc.dcc.ssd.p2p.node.NodeType.NODE;
 
-// methods should all be async
 public class KademliaNode {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
 
@@ -33,36 +37,82 @@ public class KademliaNode {
     private final Server server;
     public final RoutingTable routingTable;
     private final HashMap<ID, byte[]> repository;
+    private boolean started;
 
-    protected KademliaNode(ID id, String address, int port, ArrayList<KademliaImpl> kademliaImpl) {
+    protected KademliaNode(ID id, String address, int port, List<KademliaImpl> kademliaImpl) {
         this.id = id;
-        ServerBuilder<?> sb = ServerBuilder.forPort(port);
-        sb.addService(new Impl());
-        kademliaImpl.forEach(sb::addService);
-        this.server = sb.build();
         this.address = address;
-        this.routingTable = new RoutingTable(id);
-        this.repository = new HashMap<>();
-        // Add timer for routing table management pings
+        routingTable = new RoutingTable(id);
+        repository = new HashMap<>();
+        ServerBuilder<?> sb = ServerBuilder.forPort(port);
+        sb.addService(new KademliaImpl(routingTable, repository));
+        kademliaImpl.forEach(sb::addService);
+        server = sb.build();
+        started = false;
+        // TODO: Add timer for routing table management pings
     }
 
+    protected KademliaNode(ID id, String address, List<KademliaImpl> kademliaImpl) {
+        this.id = id;
+        this.address = address;
+        routingTable = new RoutingTable(id);
+        repository = new HashMap<>();
+        ServerBuilder<?> sb = ServerBuilder.forPort(0);
+        sb.addService(new KademliaImpl(routingTable, repository));
+        kademliaImpl.forEach(sb::addService);
+        server = sb.build();
+        // TODO: Add timer for routing table management pings
+    }
+
+    /**
+     * Creates a KademliaNode.Builder object for easier construction of a KademliaNode object
+     *
+     * @return an empty KademliaNode.Builder object
+     */
     public static Builder newBuilder() {
         return new Builder();
     }
 
+    /**
+     * Starts the node
+     *
+     * @throws IOException if there's a problem while starting this node
+     */
     public void start() throws IOException {
         server.start();
         connectionInfo = new ConnectionInfo(id, address, server.getPort());
+        started = true;
     }
 
-    public void stop() throws InterruptedException {
-        server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
+    /**
+     * Graciously shutdown this node
+     *
+     * @throws InterruptedException if there's a problem while shutting down this node
+     */
+    public boolean stop() throws InterruptedException {
+        if (started) {
+            // TODO: leave();
+            return server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
+        } else {
+            logger.warning("This node has not been started yet");
+            return false;
+        }
     }
 
+    /**
+     * Gets the ID associated with this node
+     *
+     * @return this node's ID
+     */
     public ID getId() {
         return id;
     }
 
+    /**
+     * Get's the ConnectionInfo object associated with this node
+     *
+     * @return this node's connection information
+     */
     public ConnectionInfo getConnectionInfo() {
         return connectionInfo;
     }
@@ -86,64 +136,85 @@ public class KademliaNode {
 
     /**
      * Bootstraps this node using the provided address and port
+     * <p>
+     * This node calls the {@link pt.up.fc.dcc.ssd.p2p.grpc.KademliaImpl#findNode(FindNodeRequest, StreamObserver)}
+     * RPC on the bootstrap node for it's own node ID
      *
-     * @param id      an ID object representing the bootstrap node's id
-     * @param address a string with the IP or URI compliant name, eg: "localhost", "127.0.0.1", "192.168.2.36"
-     * @param port    a port number
+     * @param destinationId an ID object representing the bootstrap node's id
+     * @param address       a string with the IP or URI compliant name, eg: "localhost", "127.0.0.1", "192.168.2.36"
+     * @param port          a port number
      * @return true if the node was successfully bootstrapped, false otherwise
      */
-    public boolean bootstrap(ID id, String address, int port) {
-        KademliaBlockingStub stub = KademliaGrpc.newBlockingStub(
-                ManagedChannelBuilder
-                        .forAddress(address, port)
-                        .usePlaintext()
-                        .build()
-        );
+    public boolean bootstrap(ID destinationId, String address, int port) {
+        ConnectionInfo destinationConnectionInfo = new ConnectionInfo(destinationId, address, port);
 
-        routingTable.update(id, new ConnectionInfo(id, address, port));
+        routingTable.update(destinationId, destinationConnectionInfo);
 
-        FindNodeRequest request = FindNodeRequest
-                .newBuilder()
-                .setDestId(this.id.toBinaryString())
-                .setConnectionInfo(connectionInfo.toDistancedConnectionInfo().toGrpcConnectionInfo())
-                .build();
+        FindNodeResponse response = (FindNodeResponse) rpc()
+                .withOriginConnInfo(connectionInfo)
+                .withDestConnInfo(destinationConnectionInfo)
+                .type(FIND_NODE)
+                .withIdToFind(id)
+                .call();
 
-        FindNodeResponse response = stub.findNode(request);
+        try {
+            return addResultsAndPing(fromGrpcConnectionInfo(response.getConnectionInfosList()));
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode().toString().equals(Code.UNAVAILABLE.toString())) {
+                logger.warning("Node with id " + destinationId + " is not online");
+            } else {
+                logger.warning(e.getMessage() + e.getStatus().getCode());
+            }
 
-        return addResultsAndPing(DistancedConnectionInfo.fromGrpcConnectionInfo(response.getConnectionInfosList()));
+            return false;
+        }
     }
 
-    public boolean ping(ID id) {
+    /**
+     * Pings the node associated with the given ID in this node's routing table,
+     * if the ID is not present in this node's routing table it calls {@link #findNode(ID)} for the given ID
+     *
+     * @param destinationId the ID of the node to be pinged
+     * @return true if the pinged node is alive, false otherwise
+     */
+    public boolean ping(ID destinationId) {
+        // TODO: clean up code
         // the destination node should always be in the routing table,
         // so it will automatically be the closest node as distance(closest, dest) = 0
         // that means it will be the first node in our sorted list of connection information
         try {
-            // TODO: catch exception if the routing table is empty + findNode if it is missing
-            DistancedConnectionInfo infoClosest = routingTable.findClosest(id).get(0);
+            List<DistancedConnectionInfo> closestList = routingTable.findClosest(destinationId);
 
-            KademliaBlockingStub stub = KademliaGrpc.newBlockingStub(
-                    ManagedChannelBuilder
-                            .forAddress(infoClosest.getAddress(), infoClosest.getPort())
-                            .usePlaintext()
-                            .build()
-            );
+            if (closestList.isEmpty()) {
+                logger.warning("Empty routing table, please bootstrap this node first!");
+                return false;
+            }
+
+            DistancedConnectionInfo closestInfo = closestList.get(0);
+
+            if (!closestInfo.getId().equals(destinationId)) {
+                if (!findNode(destinationId)) {
+                    return false;
+                }
+            }
 
             try {
-                boolean alive = stub.ping(PingRequest
-                        .newBuilder()
-                        .setConnectionInfo(this.connectionInfo.toDistancedConnectionInfo().toGrpcConnectionInfo())
-                        .build()).getAlive();
+                PingResponse response = (PingResponse) rpc()
+                        .withOriginConnInfo(connectionInfo)
+                        .withDestConnInfo(closestInfo)
+                        .type(PING)
+                        .call();
 
-                if (alive) {
-                    routingTable.update(infoClosest.getId(), infoClosest.getConnectionInfo());
+                if (response.getStatus().equals(PONG)) {
+                    routingTable.update(closestInfo);
+                    return true;
                 } else {
-                    routingTable.remove(infoClosest.getId());
+                    routingTable.remove(closestInfo.getId());
+                    return false;
                 }
-
-                return alive;
             } catch (StatusRuntimeException e) {
                 if (e.getStatus().getCode().toString().equals(Code.UNAVAILABLE.toString())) {
-                    logger.warning("Node with id " + id + " is not online");
+                    logger.warning("Node with id " + destinationId + " is not online");
                 } else {
                     logger.warning(e.getMessage() + e.getStatus().getCode());
                 }
@@ -156,6 +227,7 @@ public class KademliaNode {
         }
     }
 
+    // TODO: redo this clusterfuck
     private boolean addResultsAndPing(List<DistancedConnectionInfo> connectionInfos) {
         final boolean[] result = {true};
         connectionInfos.forEach(info -> {
@@ -168,12 +240,11 @@ public class KademliaNode {
         return result[0];
     }
 
-    // WIP
-
     /**
-     * This function calls the FIND_NODE RPC in each of the nodes this node has in it's routing table
-     * (the max. number of nodes will be MAX_BUCKET_SIZE={@value pt.up.fc.dcc.ssd.p2p.Config#MAX_BUCKET_SIZE},
-     * since if the {@value pt.up.fc.dcc.ssd.p2p.Config#MAX_BUCKET_SIZE} closest nodes can't find the node,
+     * This function calls the {@link pt.up.fc.dcc.ssd.p2p.grpc.KademliaImpl#findNode(FindNodeRequest, StreamObserver)}
+     * RPC on each of the nodes this node has in it's routing table
+     * (the max. number of nodes will be MAX_BUCKET_SIZE={@value Config#MAX_BUCKET_SIZE},
+     * since if the {@value Config#MAX_BUCKET_SIZE} closest nodes can't find the node,
      * then it cannot be found entirely), until it gets a response with an ID matching the provided ID
      *
      * @param destinationId the ID this node wants to find
@@ -181,51 +252,39 @@ public class KademliaNode {
      */
     public boolean findNode(ID destinationId) {
         try {
-            List<DistancedConnectionInfo> connectionInfos = routingTable.findClosest(destinationId);
+            List<DistancedConnectionInfo> closestInfosList = routingTable.findClosest(destinationId);
 
-            if (connectionInfos.isEmpty()) {
-                logger.warning("Node has not been bootstrapped");
+            if (closestInfosList.isEmpty()) {
+                logger.warning("Empty routing table, please bootstrap this node first!");
                 return false;
             }
 
-            if (connectionInfos.get(0).getId().equals(destinationId)) {
+            if (closestInfosList.get(0).getId().equals(destinationId)) {
                 return true;
             }
 
-            for (DistancedConnectionInfo info : connectionInfos) {
-                KademliaBlockingStub stub = KademliaGrpc.newBlockingStub(
-                        ManagedChannelBuilder
-                                .forAddress(info.getAddress(), info.getPort())
-                                .usePlaintext()
-                                .build()
-                );
+            for (DistancedConnectionInfo info : closestInfosList) {
+                FindNodeResponse response = (FindNodeResponse) rpc()
+                        .withOriginConnInfo(connectionInfo)
+                        .withDestConnInfo(info)
+                        .type(FIND_NODE)
+                        .withIdToFind(destinationId)
+                        .call();
 
-                FindNodeRequest request = FindNodeRequest
-                        .newBuilder()
-                        .setDestId(destinationId.toBinaryString())
-                        .setConnectionInfo(info.toGrpcConnectionInfo())
-                        .build();
+                List<DistancedConnectionInfo> receivedInfos = fromGrpcConnectionInfo(response.getConnectionInfosList());
 
-                FindNodeResponse response = stub.findNode(FindNodeRequest
-                        .newBuilder()
-                        .setDestId(destinationId.toBinaryString())
-                        .setConnectionInfo(connectionInfo.toDistancedConnectionInfo().toGrpcConnectionInfo())
-                        .build()
-                );
+                receivedInfos.removeIf(i -> i.getId().equals(id));
 
-                List<DistancedConnectionInfo> receivedInfos = DistancedConnectionInfo
-                        .fromGrpcConnectionInfo(response.getConnectionInfosList());
-                // they come with distance to destination node but i should save them without distance in this nodes routing table
+                // TODO: check if nodes have bigger distance
+                receivedInfos.removeAll(closestInfosList);
 
-                // check if nodes have bigger distance
-                receivedInfos.removeAll(connectionInfos);
-
-                routingTable.update(receivedInfos);
-
-                if (receivedInfos.get(0).getId().equals(destinationId)) {
-                    return true;
-                } else {
-                    connectionInfos.addAll(connectionInfos.indexOf(info) + 1, receivedInfos);
+                if (!receivedInfos.isEmpty()) {
+                    routingTable.update(receivedInfos);
+                    if (receivedInfos.get(0).getId().equals(destinationId)) {
+                        return true;
+                    } else {
+                        closestInfosList.addAll(closestInfosList.indexOf(info) + 1, receivedInfos);
+                    }
                 }
             }
 
@@ -236,105 +295,91 @@ public class KademliaNode {
         }
     }
 
-    // WIP
-    public boolean findValue(ID id) {
-        return false;
+    // TODO: findValue
+    public byte[] findValue(ID key) {
+        try {
+            List<DistancedConnectionInfo> closestInfosList = routingTable.findClosest(key);
+
+            if (closestInfosList.isEmpty()) {
+                logger.warning("Empty routing table, please bootstrap this node first!");
+                return null;
+            }
+
+            for (DistancedConnectionInfo info : closestInfosList) {
+                FindValueResponse response = (FindValueResponse) rpc()
+                        .withOriginConnInfo(connectionInfo)
+                        .withDestConnInfo(info)
+                        .type(FIND_VALUE)
+                        .withIdToFind(key)
+                        .call();
+
+                Status status = response.getStatus();
+
+                if (status.equals(FOUND)) {
+                    Data data = response.getData();
+                    return data.getValue().toByteArray();
+                } else if (status.equals(NOT_FOUND)) {
+                    List<DistancedConnectionInfo> receivedInfos = fromGrpcConnectionInfo(response.getConnectionInfosList());
+
+                    receivedInfos.removeIf(i -> i.getId().equals(id));
+
+                    // TODO: check if nodes have bigger distance
+                    receivedInfos.removeAll(closestInfosList);
+                }
+            }
+
+            return null;
+        } catch (RoutingTableException e) {
+            logger.warning(e.getMessage());
+            return null;
+        }
     }
 
-    // WIP
-    public boolean store(ID id, byte[] byteArray) {
-        return false;
+    /**
+     * Calls the {@link pt.up.fc.dcc.ssd.p2p.grpc.KademliaImpl#store(StoreRequest, StreamObserver)} RPC
+     * on the {@value Config#MAX_BUCKET_SIZE} closest nodes to the provided key ID
+     *
+     * @param key   the ID of the data to be stored
+     * @param value the data in byte[]
+     * @return true if at least one node successfully stored the <key, value> pair, false otherwise
+     */
+    public boolean store(ID key, byte[] value) {
+        try {
+            List<DistancedConnectionInfo> closestInfoList = routingTable.findClosest(key);
+
+            List<StoreResponse> responses = new ArrayList<>();
+
+            closestInfoList.forEach(info -> responses
+                    .add((StoreResponse) rpc()
+                            .withOriginConnInfo(connectionInfo)
+                            .withDestConnInfo(info).type(STORE)
+                            .withData(key, value)
+                            .call()
+                    )
+            );
+
+            return responses.stream().anyMatch(response -> response.getStatus().equals(ACCEPTED));
+        } catch (RoutingTableException e) {
+            logger.warning(e.getMessage());
+            return false;
+        }
     }
 
-    // WIP
+    // TODO: gossip
     public boolean gossip(byte[] byteArray) {
         return false;
     }
 
-    /**
-     * Kademlia RPC implementation
-     */
-    // TODO: make everything async
-    private class Impl extends KademliaGrpc.KademliaImplBase {
-
-        @Override
-        public void ping(PingRequest request, StreamObserver<PingResponse> responseObserver) {
-            if (!ValidationUtils.validateRequest(request)) {
-                responseObserver.onError(new StatusRuntimeException(Status.INVALID_ARGUMENT));
-                return;
-            }
-
-            DistancedConnectionInfo originConnectionInfo = DistancedConnectionInfo.fromGrpcConnectionInfo(request.getConnectionInfo());
-
-            if (!routingTable.update(originConnectionInfo.getId(), originConnectionInfo.getConnectionInfo())) {
-                responseObserver.onError(new StatusRuntimeException(Status.INTERNAL));
-                return;
-            }
-
-            responseObserver.onNext(PingResponse
-                    .newBuilder()
-                    .setAlive(true)
-                    .build()
-            );
-            responseObserver.onCompleted();
-        }
-
-        @Override
-        public void store(StoreRequest request, StreamObserver<StoreResponse> responseObserver) {
-            super.store(request, responseObserver);
-        }
-
-        @Override
-        public void findNode(FindNodeRequest request, StreamObserver<FindNodeResponse> responseObserver) {
-            if (!ValidationUtils.validateRequest(request)) {
-                responseObserver.onError(new StatusRuntimeException(Status.INVALID_ARGUMENT));
-                return;
-            }
-
-            List<DistancedConnectionInfo> infos;
-            try {
-                infos = routingTable.findClosest(ID.fromString(request.getDestId()));
-            } catch (RoutingTableException e) {
-                responseObserver.onError(new StatusRuntimeException(Status.INTERNAL.withDescription(e.getMessage())));
-                return;
-            }
-
-            DistancedConnectionInfo originConnectionInfo = DistancedConnectionInfo.fromGrpcConnectionInfo(request.getConnectionInfo());
-
-            routingTable.update(originConnectionInfo.getId(), originConnectionInfo.getConnectionInfo());
-
-            FindNodeResponse.Builder response = FindNodeResponse.newBuilder();
-
-            if (!(infos == null)) {
-                response.addAllConnectionInfos(infos.stream().map(DistancedConnectionInfo::toGrpcConnectionInfo).collect(Collectors.toList()));
-            }
-
-            responseObserver.onNext(response.build());
-            responseObserver.onCompleted();
-        }
-
-        @Override
-        public void findValue(ValueRequest request, StreamObserver<ValueResponse> responseObserver) {
-            super.findValue(request, responseObserver);
-        }
-
-        @Override
-        public void leave(LeaveRequest request, StreamObserver<LeaveResponse> responseObserver) {
-            super.leave(request, responseObserver);
-        }
-
-        @Override
-        public void gossip(StoreRequest request, StreamObserver<StoreResponse> responseObserver) {
-            super.gossip(request, responseObserver);
-        }
-    }
 
     public static final class Builder {
         private ID id = new ID();
-        private int port = 0;
+        private Integer port = 0;
         private String address = "localhost";
-        private NodeType type = NodeType.NODE;
+        private NodeType type = NODE;
         private final ArrayList<KademliaImpl> implementations = new ArrayList<>();
+
+        private Builder() {
+        }
 
         public Builder id(ID id) {
             this.id = id;
@@ -372,7 +417,8 @@ public class KademliaNode {
                     return new KademliaNode(BOOTSTRAP_NODE_ID, BOOTSTRAP_NODE_ADDR, BOOTSTRAP_NODE_PORT, implementations);
                 case NODE:
                 default:
-                    return new KademliaNode(id, address, port, implementations);
+                    return isNull(port) ? new KademliaNode(id, address, implementations)
+                            : new KademliaNode(id, address, port, implementations);
             }
         }
     }

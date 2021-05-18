@@ -61,7 +61,7 @@ public class DistancedConnectionInfo {
 
     public static DistancedConnectionInfo fromGrpcConnectionInfo(GrpcConnectionInfo connectionInfo) {
         return new DistancedConnectionInfo(
-                ID.fromString(connectionInfo.getId()),
+                ID.fromBinaryString(connectionInfo.getId()),
                 connectionInfo.getAddress(),
                 connectionInfo.getPort(),
                 connectionInfo.getDistance().equals("") ? null : new BigInteger(connectionInfo.getDistance())
@@ -70,5 +70,13 @@ public class DistancedConnectionInfo {
 
     public static List<DistancedConnectionInfo> fromGrpcConnectionInfo(List<GrpcConnectionInfo> list) {
         return list.stream().map(DistancedConnectionInfo::fromGrpcConnectionInfo).collect(Collectors.toList());
+    }
+
+    @Override
+    public String toString() {
+        return "DistancedConnectionInfo{" +
+                "connectionInfo=" + connectionInfo +
+                ", distance=" + distance +
+                '}';
     }
 }

@@ -1,21 +1,21 @@
-package pt.up.fc.dcc.ssd.p2p.table;
+package pt.up.fc.dcc.ssd.p2p.routing;
 
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.node.ID;
-import pt.up.fc.dcc.ssd.p2p.table.exceptions.InvalidDistanceException;
+import pt.up.fc.dcc.ssd.p2p.routing.exceptions.InvalidDistanceException;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static pt.up.fc.dcc.ssd.p2p.Config.MAX_BUCKET_SIZE;
-import static pt.up.fc.dcc.ssd.p2p.Config.MAX_DISTANCE;
+import static pt.up.fc.dcc.ssd.p2p.common.Config.MAX_BUCKET_SIZE;
+import static pt.up.fc.dcc.ssd.p2p.common.Config.MAX_DISTANCE;
 
 // TODO: implement replacement cache
 public class KBucket {
-    private final ArrayList<ID> nodeIds;
+    private final List<ID> nodeIds;
     private final ConcurrentHashMap<ID, ConnectionInfo> nodeMap;
 
     public KBucket() {
@@ -69,8 +69,8 @@ public class KBucket {
         }
     }
 
-    protected ArrayList<DistancedConnectionInfo> get(ID destId) {
-        ArrayList<DistancedConnectionInfo> connectionInfos = new ArrayList<>();
+    protected List<DistancedConnectionInfo> get(ID destId) {
+        List<DistancedConnectionInfo> connectionInfos = new ArrayList<>();
 
         for (ID id : nodeIds) {
             DistancedConnectionInfo distancedConnectionInfo = distancedConnectionInfo(nodeMap.get(id), destId);

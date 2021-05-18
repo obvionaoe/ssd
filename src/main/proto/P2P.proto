@@ -12,35 +12,36 @@ service Kademlia {
 
   rpc findNode (FindNodeRequest) returns (FindNodeResponse) {}
 
-  rpc findValue (ValueRequest) returns (ValueResponse) {}
+  rpc findValue (FindValueRequest) returns (FindValueResponse) {}
 
-  rpc leave (LeaveRequest) returns (LeaveResponse) {} //?
+  rpc leave (LeaveRequest) returns (LeaveResponse) {}
 
-  rpc gossip (StoreRequest) returns (StoreResponse) {} //?
+  rpc gossip (StoreRequest) returns (StoreResponse) {}
 }
 
 // Requests
 message BootstrapRequest {
-  GrpcConnectionInfo connectionInfo = 1;
+  GrpcConnectionInfo originConnectionInfo = 1;
 }
 
 message PingRequest {
-  GrpcConnectionInfo connectionInfo = 1;
+  GrpcConnectionInfo originConnectionInfo = 1;
 }
 
 message StoreRequest {
-  GrpcConnectionInfo connectionInfo = 1;
+  GrpcConnectionInfo originConnectionInfo = 1;
+  DataType dataType = 2;
   Data data = 3;
 }
 
 message FindNodeRequest {
   string destId = 1;
-  GrpcConnectionInfo connectionInfo = 2;
+  GrpcConnectionInfo originConnectionInfo = 2;
 }
 
-message ValueRequest {
+message FindValueRequest {
   string key = 1;
-  GrpcConnectionInfo connectionInfo = 2;
+  GrpcConnectionInfo originConnectionInfo = 2;
 }
 
 message LeaveRequest {
@@ -48,46 +49,65 @@ message LeaveRequest {
 }
 
 message GossipRequest {
-  GrpcConnectionInfo connectionInfo = 1;
+  GrpcConnectionInfo originConnectionInfo = 1;
   repeated string visitedNodeIds = 2;
   Data data = 3;
 }
 
 // Responses
 message BootstrapResponse {
-  repeated GrpcConnectionInfo connectionInfos = 1;
+  Status status = 1;
+  repeated GrpcConnectionInfo connectionInfos = 2;
 }
 
 message PingResponse {
-  bool alive = 1;
+  Status status = 1;
 }
 
 message StoreResponse {
-
+  Status status = 1;
 }
 
 message FindNodeResponse {
   repeated GrpcConnectionInfo connectionInfos = 1;
 }
 
-message ValueResponse {
-
+message FindValueResponse {
+  Status status = 1;
+  Data data = 2;
+  repeated GrpcConnectionInfo connectionInfos = 3;
 }
 
 message LeaveResponse {
-  bool received = 1;
+  Status status = 1;
 }
 
-// Internal Messages
+// Other Messages
 
 message GrpcConnectionInfo {
   string id = 1;
   string address = 2;
   int32 port = 3;
-  string distance = 4;
+  string distance = 4; // TODO: check if this is working correctly
 }
 
 message Data {
   string key = 1;
   bytes value = 2;
+}
+
+// TODO: Needed?
+enum DataType {
+  BLOCK = 0;
+  TOPIC = 1;
+}
+
+enum Status {
+  ACCEPTED = 0;
+  RECEIVED = 1;
+  ALREADY_STORED = 2;
+  FAILED = 3;
+  PONG = 4;
+  FOUND = 5;
+  NOT_FOUND = 6;
 }
