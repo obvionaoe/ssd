@@ -16,7 +16,7 @@ service Kademlia {
 
   rpc leave (LeaveRequest) returns (LeaveResponse) {}
 
-  rpc gossip (StoreRequest) returns (StoreResponse) {}
+  rpc gossip (GossipRequest) returns (GossipResponse) {}
 }
 
 // Requests
@@ -79,6 +79,10 @@ message FindValueResponse {
 }
 
 message LeaveResponse {
+  Status status = 1;
+}
+
+message GossipResponse {
   Status status = 1;
 }
 

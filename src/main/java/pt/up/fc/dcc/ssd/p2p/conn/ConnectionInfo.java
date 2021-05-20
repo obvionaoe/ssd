@@ -1,21 +1,21 @@
 package pt.up.fc.dcc.ssd.p2p.conn;
 
-import pt.up.fc.dcc.ssd.p2p.node.ID;
+import pt.up.fc.dcc.ssd.p2p.node.Id;
 
 import java.util.Objects;
 
 public class ConnectionInfo {
-    private final ID id;
+    private final Id id;
     private final String address;
     private final int port;
 
-    public ConnectionInfo(ID id, String address, int port) {
+    public ConnectionInfo(Id id, String address, int port) {
         this.id = id;
         this.address = address;
         this.port = port;
     }
 
-    public ID getId() {
+    public Id getId() {
         return id;
     }
 

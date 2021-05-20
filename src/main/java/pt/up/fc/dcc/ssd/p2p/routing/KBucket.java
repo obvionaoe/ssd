@@ -2,7 +2,7 @@ package pt.up.fc.dcc.ssd.p2p.routing;
 
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
-import pt.up.fc.dcc.ssd.p2p.node.ID;
+import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.routing.exceptions.InvalidDistanceException;
 
 import java.math.BigInteger;
@@ -15,8 +15,8 @@ import static pt.up.fc.dcc.ssd.p2p.common.Config.MAX_DISTANCE;
 
 // TODO: implement replacement cache
 public class KBucket {
-    private final List<ID> nodeIds;
-    private final ConcurrentHashMap<ID, ConnectionInfo> nodeMap;
+    private final List<Id> nodeIds;
+    private final ConcurrentHashMap<Id, ConnectionInfo> nodeMap;
 
     public KBucket() {
         this.nodeIds = new ArrayList<>(MAX_BUCKET_SIZE);
@@ -24,7 +24,7 @@ public class KBucket {
     }
 
     // TODO: needs robustness
-    protected boolean update(ID id, ConnectionInfo connectionInfo) {
+    protected boolean update(Id id, ConnectionInfo connectionInfo) {
         if (!nodeIds.remove(id)) {
             if (nodeIds.size() >= MAX_BUCKET_SIZE) {
                 return false;
@@ -40,18 +40,18 @@ public class KBucket {
     }
 
     // TODO: needs robustness, should return bool
-    protected void remove(ID id) {
+    protected void remove(Id id) {
         nodeIds.remove(id);
         nodeMap.remove(id);
     }
 
 
-    protected boolean contains(ID id) {
+    protected boolean contains(Id id) {
         return nodeMap.containsKey(id);
     }
 
-    protected static BigInteger distance(ID x, ID y) throws InvalidDistanceException {
-        ID clone = (ID) x.clone();
+    protected static BigInteger distance(Id x, Id y) throws InvalidDistanceException {
+        Id clone = x.copy();
         clone.xor(y);
 
         BigInteger result = new BigInteger(clone.toByteArray());
@@ -61,7 +61,7 @@ public class KBucket {
         return result;
     }
 
-    private static DistancedConnectionInfo distancedConnectionInfo(ConnectionInfo connectionInfo, ID destId) {
+    private static DistancedConnectionInfo distancedConnectionInfo(ConnectionInfo connectionInfo, Id destId) {
         try {
             return new DistancedConnectionInfo(connectionInfo, distance(connectionInfo.getId(), destId));
         } catch (InvalidDistanceException e) {
@@ -69,10 +69,10 @@ public class KBucket {
         }
     }
 
-    protected List<DistancedConnectionInfo> get(ID destId) {
+    protected List<DistancedConnectionInfo> get(Id destId) {
         List<DistancedConnectionInfo> connectionInfos = new ArrayList<>();
 
-        for (ID id : nodeIds) {
+        for (Id id : nodeIds) {
             DistancedConnectionInfo distancedConnectionInfo = distancedConnectionInfo(nodeMap.get(id), destId);
             if (distancedConnectionInfo == null) continue;
 
@@ -82,7 +82,7 @@ public class KBucket {
         return connectionInfos;
     }
 
-    protected ConnectionInfo getNodeConnectionInfo(ID id) {
+    protected ConnectionInfo getNodeConnectionInfo(Id id) {
         return nodeMap.get(id);
     }
 

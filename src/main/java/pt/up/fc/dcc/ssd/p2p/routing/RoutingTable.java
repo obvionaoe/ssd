@@ -3,7 +3,7 @@ package pt.up.fc.dcc.ssd.p2p.routing;
 import pt.up.fc.dcc.ssd.p2p.common.Config;
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
-import pt.up.fc.dcc.ssd.p2p.node.ID;
+import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.routing.exceptions.InvalidDistanceException;
 import pt.up.fc.dcc.ssd.p2p.routing.exceptions.RoutingTableException;
 
@@ -22,10 +22,10 @@ import static pt.up.fc.dcc.ssd.p2p.common.Config.MAX_BUCKET_SIZE;
 public class RoutingTable {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
 
-    private final ID nodeId;
+    private final Id nodeId;
     private final List<KBucket> buckets;
 
-    public RoutingTable(ID nodeId) {
+    public RoutingTable(Id nodeId) {
         this.nodeId = nodeId;
         this.buckets = new ArrayList<>(ID_N_BITS);
         for (int i = 0; i < ID_N_BITS; i++) {
@@ -33,7 +33,7 @@ public class RoutingTable {
         }
     }
 
-    public boolean update(ID destinationId, ConnectionInfo connectionInfo) {
+    public boolean update(Id destinationId, ConnectionInfo connectionInfo) {
         try {
             return buckets.get(findBucket(destinationId)).update(destinationId, connectionInfo);
         } catch (RoutingTableException e) {
@@ -50,16 +50,16 @@ public class RoutingTable {
         infos.forEach(this::update);
     }
 
-    public void remove(ID id) throws RoutingTableException {
+    public void remove(Id id) throws RoutingTableException {
         buckets.get(findBucket(id)).remove(id);
     }
 
-    public static BigInteger distance(ID x, ID y) throws InvalidDistanceException {
+    public static BigInteger distance(Id x, Id y) throws InvalidDistanceException {
         return KBucket.distance(x, y);
     }
 
 
-    private int findBucket(ID destinationId) throws RoutingTableException {
+    private int findBucket(Id destinationId) throws RoutingTableException {
         BigInteger distance;
 
         if (nodeId.toString().equals(destinationId.toString())) throw new RoutingTableException("A node can't call itself");
@@ -84,7 +84,7 @@ public class RoutingTable {
     }
 
     // Is this needed? might be slower than other methods
-    public boolean contains(ID id) {
+    public boolean contains(Id id) {
         try {
             return buckets.get(findBucket(id)).contains(id);
         } catch (RoutingTableException e) {
@@ -101,7 +101,7 @@ public class RoutingTable {
      * @return a list of connection infos, if the node is present in the routing table,
      * it will be the first element of that list
      */
-    public List<DistancedConnectionInfo> findClosest(ID id) throws RoutingTableException {
+    public List<DistancedConnectionInfo> findClosest(Id id) throws RoutingTableException {
         int bucketPos = findBucket(id);
         List<DistancedConnectionInfo> connectionInfos = new ArrayList<>(buckets.get(bucketPos).get(id));
         // is this the correct way? No, but works for small networks and for the current state of affairs

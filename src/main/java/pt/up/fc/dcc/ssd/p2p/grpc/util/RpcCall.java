@@ -4,20 +4,29 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.GeneratedMessageV3;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
+import pt.up.fc.dcc.ssd.p2p.common.util.ResponsePair;
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.grpc.*;
 import pt.up.fc.dcc.ssd.p2p.grpc.KademliaGrpc.KademliaBlockingStub;
-import pt.up.fc.dcc.ssd.p2p.node.ID;
+import pt.up.fc.dcc.ssd.p2p.node.Id;
 
+import static pt.up.fc.dcc.ssd.p2p.common.util.ResponsePair.pair;
 import static pt.up.fc.dcc.ssd.p2p.common.util.Utils.isNull;
+import static pt.up.fc.dcc.ssd.p2p.grpc.Status.FAILED;
 
+//TODO: add comments
+
+/**
+ * Object that creates a request and calls an RPC
+ */
 public class RpcCall {
     private KademliaBlockingStub stub;
     private ConnectionInfo originConnectionInfo;
     private ConnectionInfo destinationConnectionInfo;
     private RpcType type;
-    private ID idToFInd;
+    private Id idToFind;
     private Data data;
 
     private RpcCall() {
@@ -47,12 +56,12 @@ public class RpcCall {
         return this;
     }
 
-    public RpcCall withIdToFind(ID destinationId) {
-        this.idToFInd = destinationId;
+    public RpcCall withId(Id destinationId) {
+        this.idToFind = destinationId;
         return this;
     }
 
-    public RpcCall withData(ID key, byte[] value) {
+    public RpcCall withData(Id key, byte[] value) {
         data = Data
                 .newBuilder()
                 .setKey(key.toBinaryString())
@@ -62,7 +71,7 @@ public class RpcCall {
         return this;
     }
 
-    public GeneratedMessageV3 call() throws NullPointerException {
+    public ResponsePair<Status,GeneratedMessageV3> call() throws NullPointerException {
         if (isNull(destinationConnectionInfo)) {
             throw new NullPointerException("Missing destination connection information!");
         }
@@ -76,7 +85,7 @@ public class RpcCall {
         }
 
         ManagedChannel channel = null;
-        GeneratedMessageV3 response = null;
+        ResponsePair<Status, GeneratedMessageV3> responsePair = null;
         try {
             channel = ManagedChannelBuilder
                     .forAddress(destinationConnectionInfo.getAddress(), destinationConnectionInfo.getPort())
@@ -89,7 +98,7 @@ public class RpcCall {
 
             switch (type) {
                 case PING:
-                    response = stub.ping(PingRequest
+                    PingResponse pingResponse = stub.ping(PingRequest
                             .newBuilder()
                             .setOriginConnectionInfo(originConnectionInfo
                                     .toDistancedConnectionInfo()
@@ -97,13 +106,15 @@ public class RpcCall {
                             )
                             .build()
                     );
+
+                    responsePair = pair(pingResponse.getStatus(), pingResponse);
                     break;
                 case STORE:
                     if (isNull(data)) {
                         throw new NullPointerException("Missing data to store!");
                     }
 
-                    response = stub.store(StoreRequest
+                    StoreResponse storeResponse = stub.store(StoreRequest
                             .newBuilder()
                             .setOriginConnectionInfo(originConnectionInfo
                                     .toDistancedConnectionInfo()
@@ -111,53 +122,77 @@ public class RpcCall {
                             ).setData(data)
                             .build()
                     );
+
+                    responsePair = pair(storeResponse.getStatus(), storeResponse);
                     break;
                 case FIND_NODE:
-                    if (isNull(idToFInd)) {
+                    if (isNull(idToFind)) {
                         throw new NullPointerException("Missing lookup id!");
                     }
 
-                    response = stub.findNode(FindNodeRequest
+                    FindNodeResponse findNodeResponse = stub.findNode(FindNodeRequest
                             .newBuilder()
-                            .setDestId(idToFInd.toBinaryString())
+                            .setDestId(idToFind.toBinaryString())
                             .setOriginConnectionInfo(originConnectionInfo
                                     .toDistancedConnectionInfo()
                                     .toGrpcConnectionInfo()
                             )
                             .build()
                     );
+
+                    responsePair = pair(null, findNodeResponse);
                     break;
                 case FIND_VALUE:
-                    if (isNull(idToFInd)) {
+                    if (isNull(idToFind)) {
                         throw new NullPointerException("Missing lookup id!");
                     }
 
-                    response = stub.findValue(FindValueRequest
+                    FindValueResponse findValueResponse = stub.findValue(FindValueRequest
                             .newBuilder()
                             .setOriginConnectionInfo(originConnectionInfo
                                     .toDistancedConnectionInfo()
                                     .toGrpcConnectionInfo()
                             )
-                            .setKey(idToFInd.toBinaryString())
+                            .setKey(idToFind.toBinaryString())
                             .build()
                     );
+
+                    responsePair = pair(findValueResponse.getStatus(), findValueResponse);
                     break;
                 case LEAVE:
+                    if (isNull(idToFind)) {
+                        throw new NullPointerException("Missing node id!");
+                    }
+
+                    LeaveResponse leaveResponse = stub.leave(LeaveRequest
+                            .newBuilder()
+                            .setId(idToFind.toBinaryString())
+                            .build()
+                    );
+
+                    responsePair = pair(leaveResponse.getStatus(), leaveResponse);
                     break;
                 case GOSSIP:
                     if (isNull(data)) {
                         throw new NullPointerException("Missing data");
                     }
 
-                    response = stub.gossip(StoreRequest.newBuilder().build());
+                    GossipResponse gossipResponse = stub.gossip(GossipRequest
+                            .newBuilder() //TODO: add stuff here
+                            .build()
+                    );
+
+                    responsePair = pair(gossipResponse.getStatus(), gossipResponse);
                     break;
             }
+        } catch (StatusRuntimeException e) {
+            responsePair = pair(FAILED, null);
         } finally {
             if (channel != null) {
                 channel.shutdownNow();
             }
         }
 
-        return response;
+        return responsePair;
     }
 }

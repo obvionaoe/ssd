@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
-import pt.up.fc.dcc.ssd.p2p.node.ID;
+import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.routing.RoutingTable;
 import pt.up.fc.dcc.ssd.p2p.routing.exceptions.RoutingTableException;
 
@@ -18,16 +18,16 @@ import static pt.up.fc.dcc.ssd.p2p.common.util.Utils.isNotNull;
 import static pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo.fromGrpcConnectionInfo;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.*;
 import static pt.up.fc.dcc.ssd.p2p.grpc.util.Validation.validateRequest;
-import static pt.up.fc.dcc.ssd.p2p.node.ID.fromBinaryString;
+import static pt.up.fc.dcc.ssd.p2p.node.Id.idFromBinaryString;
 
 /**
  * Kademlia RPC implementation
  */
 public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
     private final RoutingTable routingTable;
-    private final HashMap<ID, byte[]> repository;
+    private final HashMap<Id, byte[]> repository;
 
-    public KademliaImpl(RoutingTable routingTable, HashMap<ID, byte[]> repository) {
+    public KademliaImpl(RoutingTable routingTable, HashMap<Id, byte[]> repository) {
         this.routingTable = routingTable;
         this.repository = repository;
     }
@@ -71,7 +71,7 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         StoreResponse.Builder response = StoreResponse.newBuilder();
 
         // TODO: should have keepAlive time
-        if (isNotNull(repository.put(fromBinaryString(data.getKey()), data.getValue().toByteArray()))) {
+        if (isNotNull(repository.put(idFromBinaryString(data.getKey()), data.getValue().toByteArray()))) {
             response.setStatus(ACCEPTED);
         } else {
             response.setStatus(FAILED);
@@ -92,7 +92,7 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
 
         List<DistancedConnectionInfo> infos;
         try {
-            infos = routingTable.findClosest(fromBinaryString(request.getDestId()));
+            infos = routingTable.findClosest(idFromBinaryString(request.getDestId()));
         } catch (RoutingTableException e) {
             responseObserver.onError(new StatusRuntimeException(INTERNAL.withDescription(e.getMessage())));
             return;
@@ -119,7 +119,7 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
             return;
         }
 
-        ID key = fromBinaryString(request.getKey());
+        Id key = idFromBinaryString(request.getKey());
 
         FindValueResponse.Builder response = FindValueResponse.newBuilder();
 
@@ -163,7 +163,7 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
     }
 
     @Override
-    public void gossip(StoreRequest request, StreamObserver<StoreResponse> responseObserver) {
+    public void gossip(GossipRequest request, StreamObserver<GossipResponse> responseObserver) {
         // TODO
     }
 }

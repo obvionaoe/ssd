@@ -1,10 +1,11 @@
 package pt.up.fc.dcc.ssd.p2p.conn;
 
 import pt.up.fc.dcc.ssd.p2p.grpc.GrpcConnectionInfo;
-import pt.up.fc.dcc.ssd.p2p.node.ID;
+import pt.up.fc.dcc.ssd.p2p.node.Id;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class DistancedConnectionInfo {
@@ -16,7 +17,7 @@ public class DistancedConnectionInfo {
         this.distance = distance;
     }
 
-    public DistancedConnectionInfo(ID id, String address, int port, BigInteger distance) {
+    public DistancedConnectionInfo(Id id, String address, int port, BigInteger distance) {
         this.connectionInfo = new ConnectionInfo(id, address, port);
         this.distance = distance;
     }
@@ -25,7 +26,7 @@ public class DistancedConnectionInfo {
         return connectionInfo;
     }
 
-    public ID getId() {
+    public Id getId() {
         return connectionInfo.getId();
     }
 
@@ -61,7 +62,7 @@ public class DistancedConnectionInfo {
 
     public static DistancedConnectionInfo fromGrpcConnectionInfo(GrpcConnectionInfo connectionInfo) {
         return new DistancedConnectionInfo(
-                ID.fromBinaryString(connectionInfo.getId()),
+                Id.idFromBinaryString(connectionInfo.getId()),
                 connectionInfo.getAddress(),
                 connectionInfo.getPort(),
                 connectionInfo.getDistance().equals("") ? null : new BigInteger(connectionInfo.getDistance())
@@ -78,5 +79,18 @@ public class DistancedConnectionInfo {
                 "connectionInfo=" + connectionInfo +
                 ", distance=" + distance +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DistancedConnectionInfo info = (DistancedConnectionInfo) o;
+        return connectionInfo.equals(info.connectionInfo) && Objects.equals(distance, info.distance);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(connectionInfo, distance);
     }
 }
