@@ -7,8 +7,7 @@ public class SerializableMockup implements Serializable {
 
     public byte[] toByteArray() {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            ObjectOutputStream out = null;
-            out = new ObjectOutputStream(bos);
+            ObjectOutputStream out = new ObjectOutputStream(bos);
             out.writeObject(this);
             out.flush();
             return bos.toByteArray();
