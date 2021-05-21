@@ -1,4 +1,4 @@
-package pt.up.fc.dcc.ssd.p2p.grpc.util;
+package pt.up.fc.dcc.ssd.p2p.grpc;
 
 public enum RpcType {
     PING,

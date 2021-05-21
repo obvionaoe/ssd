@@ -1,4 +1,4 @@
-package pt.up.fc.dcc.ssd.p2p.common.util;
+package pt.up.fc.dcc.ssd.p2p.grpc;
 
 import java.util.Objects;
 

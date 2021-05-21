@@ -4,6 +4,11 @@ import java.io.*;
 
 public class SerializableMockup implements Serializable {
     public final long serialVersionUID = 1L;
+    String test;
+
+    public SerializableMockup(String test) {
+        this.test = test;
+    }
 
     public byte[] toByteArray() {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
@@ -25,5 +30,13 @@ public class SerializableMockup implements Serializable {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static void main(String[] args) {
+        SerializableMockup sm = new SerializableMockup("teste");
+
+        System.out.println(sm.test);
+
+        System.out.println(SerializableMockup.toObject(sm.toByteArray()).test);
     }
 }

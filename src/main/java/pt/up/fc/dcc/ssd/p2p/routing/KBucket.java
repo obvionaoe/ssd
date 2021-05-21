@@ -54,7 +54,7 @@ public class KBucket {
         Id clone = x.copy();
         clone.xor(y);
 
-        BigInteger result = new BigInteger(clone.toByteArray());
+        BigInteger result = new BigInteger(clone.toBytes());
         if (result.compareTo(BigInteger.ZERO) < 0 || result.compareTo(MAX_DISTANCE) > 0)
             throw new InvalidDistanceException("The distance to the given ID is invalid");
 
