@@ -71,7 +71,13 @@ public class RpcCall {
         return this;
     }
 
-    public ResponsePair<Status,GeneratedMessageV3> call() throws NullPointerException {
+    /**
+     * Calls and RPC of the specified type and returns a ResponsePair<Status, GeneratedMessageV3>
+     *
+     * @return a ResponsePair with the status and the response
+     * @throws NullPointerException if a
+     */
+    public ResponsePair<Status, GeneratedMessageV3> call() throws NullPointerException {
         if (isNull(destinationConnectionInfo)) {
             throw new NullPointerException("Missing destination connection information!");
         }
