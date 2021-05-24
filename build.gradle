@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'com.google.protobuf' version '0.8.15'
 }
 
 group 'pt.up.fc.dcc.ssd'
@@ -9,9 +10,36 @@ repositories {
     mavenCentral()
 }
 
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.12.0"
+    }
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.36.0'
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
+}
+
+sourceSets {
+    main.java {
+        srcDirs 'build/generated/source/proto/main/grpc'
+        srcDirs 'build/generated/source/proto/main/java'
+    }
+}
+
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+
+    implementation 'io.grpc:grpc-netty-shaded:1.36.0'
+    implementation 'io.grpc:grpc-protobuf:1.36.0'
+    implementation 'io.grpc:grpc-stub:1.36.0'
 }
 
 test {

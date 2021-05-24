@@ -1,32 +1,118 @@
-// early sketch of p2p network
-
 syntax = "proto3";
 
 option java_multiple_files = true;
 option java_outer_classname = "P2P";
 
-package pt.up.fc.dcc.ssd.p2p;
+package pt.up.fc.dcc.ssd.p2p.grpc;
 
-service AuctionToMiner {
-  rpc registerTransaction (TransactionInfo) returns (TransactionResponse) {}
+service Kademlia {
+  rpc ping (PingRequest) returns (PingResponse) {}
+
+  rpc store (StoreRequest) returns (StoreResponse) {}
+
+  rpc findNode (FindNodeRequest) returns (FindNodeResponse) {}
+
+  rpc findValue (FindValueRequest) returns (FindValueResponse) {}
+
+  rpc leave (LeaveRequest) returns (LeaveResponse) {}
+
+  rpc gossip (GossipRequest) returns (GossipResponse) {}
 }
 
-service MinerToMiner {
-  rpc sync (TransactionInfo) returns (TransactionResponse) {}
+// Requests
+message BootstrapRequest {
+  GrpcConnectionInfo originConnectionInfo = 1;
 }
 
-service AuctionClient { // ???
-
+message PingRequest {
+  GrpcConnectionInfo originConnectionInfo = 1;
 }
 
-message TransactionInfo {
-
+message StoreRequest {
+  GrpcConnectionInfo originConnectionInfo = 1;
+  DataType dataType = 2;
+  Data data = 3;
 }
 
-message RegisterResponse {
-
+message FindNodeRequest {
+  string destId = 1;
+  GrpcConnectionInfo originConnectionInfo = 2;
 }
 
-message TransactionResponse {
+message FindValueRequest {
+  string key = 1;
+  GrpcConnectionInfo originConnectionInfo = 2;
+}
 
+message LeaveRequest {
+  string id = 1;
+}
+
+message GossipRequest {
+  GrpcConnectionInfo originConnectionInfo = 1;
+  repeated string visitedNodeIds = 2;
+  Data data = 3;
+}
+
+// Responses
+message BootstrapResponse {
+  Status status = 1;
+  repeated GrpcConnectionInfo connectionInfos = 2;
+}
+
+message PingResponse {
+  Status status = 1;
+}
+
+message StoreResponse {
+  Status status = 1;
+}
+
+message FindNodeResponse {
+  repeated GrpcConnectionInfo connectionInfos = 1;
+}
+
+message FindValueResponse {
+  Status status = 1;
+  Data data = 2;
+  repeated GrpcConnectionInfo connectionInfos = 3;
+}
+
+message LeaveResponse {
+  Status status = 1;
+}
+
+message GossipResponse {
+  Status status = 1;
+}
+
+// Other Messages
+
+message GrpcConnectionInfo {
+  string id = 1;
+  string address = 2;
+  int32 port = 3;
+  string distance = 4; // TODO: check if this is working correctly
+}
+
+message Data {
+  string key = 1;
+  bytes value = 2;
+}
+
+// TODO: Needed?
+enum DataType {
+  BLOCK = 0;
+  TOPIC = 1;
+  BID = 2;
+}
+
+enum Status {
+  ACCEPTED = 0;
+  RECEIVED = 1;
+  ALREADY_STORED = 2;
+  FAILED = 3;
+  PONG = 4;
+  FOUND = 5;
+  NOT_FOUND = 6;
 }
