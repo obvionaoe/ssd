@@ -1,6 +1,4 @@
-package pt.up.fc.dcc.ssd.p2p.grpc.util;
-
-import pt.up.fc.dcc.ssd.p2p.grpc.*;
+package pt.up.fc.dcc.ssd.p2p.grpc;
 
 // TODO: finish this properly
 public class Validation {

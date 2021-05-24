@@ -6,7 +6,6 @@ import io.grpc.ServerBuilder;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import pt.up.fc.dcc.ssd.p2p.common.Config;
-import pt.up.fc.dcc.ssd.p2p.common.util.ResponsePair;
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.grpc.*;
@@ -22,12 +21,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static pt.up.fc.dcc.ssd.p2p.common.Config.*;
-import static pt.up.fc.dcc.ssd.p2p.common.util.ResponsePair.cast;
 import static pt.up.fc.dcc.ssd.p2p.common.util.Utils.isNull;
 import static pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo.fromGrpcConnectionInfo;
+import static pt.up.fc.dcc.ssd.p2p.grpc.ResponsePair.cast;
+import static pt.up.fc.dcc.ssd.p2p.grpc.RpcCall.rpc;
+import static pt.up.fc.dcc.ssd.p2p.grpc.RpcType.*;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.*;
-import static pt.up.fc.dcc.ssd.p2p.grpc.util.RpcCall.rpc;
-import static pt.up.fc.dcc.ssd.p2p.grpc.util.RpcType.*;
 import static pt.up.fc.dcc.ssd.p2p.node.NodeType.NODE;
 
 public class KademliaNode {
@@ -328,7 +327,9 @@ public class KademliaNode {
                 return null;
             }
 
-            for (DistancedConnectionInfo info : closestInfosList) {
+            for (int i = 0; i <= closestInfosList.size() - 1; i++) {
+                DistancedConnectionInfo info = closestInfosList.get(i);
+
                 ResponsePair<Status, FindValueResponse> responsePair = cast(rpc()
                         .withOriginConnInfo(connectionInfo)
                         .withDestConnInfo(info)
@@ -348,7 +349,7 @@ public class KademliaNode {
                         .getConnectionInfosList()
                     );
 
-                    receivedInfos.removeIf(i -> i.getId().equals(id));
+                    receivedInfos.removeIf(receivedInfo -> receivedInfo.getId().equals(id));
 
                     // TODO: check if nodes have bigger distance
                     receivedInfos.removeAll(closestInfosList);

@@ -17,7 +17,7 @@ import static io.grpc.Status.INVALID_ARGUMENT;
 import static pt.up.fc.dcc.ssd.p2p.common.util.Utils.isNotNull;
 import static pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo.fromGrpcConnectionInfo;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.*;
-import static pt.up.fc.dcc.ssd.p2p.grpc.util.Validation.validateRequest;
+import static pt.up.fc.dcc.ssd.p2p.grpc.Validation.validateRequest;
 import static pt.up.fc.dcc.ssd.p2p.node.Id.idFromBinaryString;
 
 /**

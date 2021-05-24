@@ -104,6 +104,7 @@ message Data {
 enum DataType {
   BLOCK = 0;
   TOPIC = 1;
+  BID = 2;
 }
 
 enum Status {

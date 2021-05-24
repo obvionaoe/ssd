@@ -1,19 +1,17 @@
-package pt.up.fc.dcc.ssd.p2p.grpc.util;
+package pt.up.fc.dcc.ssd.p2p.grpc;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.GeneratedMessageV3;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
-import pt.up.fc.dcc.ssd.p2p.common.util.ResponsePair;
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
-import pt.up.fc.dcc.ssd.p2p.grpc.*;
 import pt.up.fc.dcc.ssd.p2p.grpc.KademliaGrpc.KademliaBlockingStub;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
-import static pt.up.fc.dcc.ssd.p2p.common.util.ResponsePair.pair;
 import static pt.up.fc.dcc.ssd.p2p.common.util.Utils.isNull;
+import static pt.up.fc.dcc.ssd.p2p.grpc.ResponsePair.pair;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.FAILED;
 
 //TODO: add comments
@@ -71,7 +69,13 @@ public class RpcCall {
         return this;
     }
 
-    public ResponsePair<Status,GeneratedMessageV3> call() throws NullPointerException {
+    /**
+     * Calls and RPC of the specified type and returns a ResponsePair<Status, GeneratedMessageV3>
+     *
+     * @return a ResponsePair with the status and the response
+     * @throws NullPointerException if a
+     */
+    public ResponsePair<Status, GeneratedMessageV3> call() throws NullPointerException {
         if (isNull(destinationConnectionInfo)) {
             throw new NullPointerException("Missing destination connection information!");
         }

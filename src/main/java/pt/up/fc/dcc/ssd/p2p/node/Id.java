@@ -1,6 +1,7 @@
 package pt.up.fc.dcc.ssd.p2p.node;
 
 import javax.xml.bind.DatatypeConverter;
+import java.io.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -10,7 +11,8 @@ import java.util.stream.IntStream;
 
 import static pt.up.fc.dcc.ssd.p2p.common.Config.ID_N_BITS;
 
-public class Id {
+public class Id implements Serializable {
+    public final long serialVersionUID = 1L;
     private static final SecureRandom sr = new SecureRandom();
     private final BitSet bs;
 
@@ -18,10 +20,10 @@ public class Id {
      * Generates a random KademliaNode ID
      */
     public Id() {
-        byte[] arr = new byte[20];
+        byte[] arr = new byte[32];
         sr.nextBytes(arr);
 
-        bs = BitSet.valueOf(getSha1Hash(arr));
+        bs = BitSet.valueOf(getHash(arr));
 
         /*bs = new BitSet(ID_N_BITS);
         for (int i = 0; i < ID_N_BITS; i++) {
@@ -42,7 +44,7 @@ public class Id {
      * @return an Id built from a SHA-1 hash of the data, null if there was a problem
      */
     public static Id idFromData(byte[] data) {
-        return new Id(BitSet.valueOf(getSha1Hash(data)));
+        return new Id(BitSet.valueOf(getHash(data)));
     }
 
     /**
@@ -74,7 +76,7 @@ public class Id {
      *
      * @return a byte[] representing the underlying BitSet
      */
-    public byte[] toByteArray() {
+    public byte[] toBytes() {
         byte[] bytes = new byte[bs.length() / 8 + 1];
         for (int i = 0; i < bs.length(); i++) {
             if (bs.get(i)) {
@@ -95,13 +97,12 @@ public class Id {
         return buffer.toString();
     }
 
-    private static byte[] getSha1Hash(byte[] data) {
+    private static byte[] getHash(byte[] data) {
         byte[] hash = null;
 
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-1");
-            md.update(data);
-            hash = md.digest();
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            hash = md.digest(data);
         } catch (NoSuchAlgorithmException ignored) {}
 
         return hash;
@@ -136,5 +137,28 @@ public class Id {
     @Override
     public int hashCode() {
         return Objects.hash(bs);
+    }
+
+    // TESTING
+    public byte[] toByteArray() {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            ObjectOutputStream out = new ObjectOutputStream(bos);
+            out.writeObject(this);
+            out.flush();
+            return bos.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static Id toObject(byte[] arr) {
+        ByteArrayInputStream bis = new ByteArrayInputStream(arr);
+        try (ObjectInput in = new ObjectInputStream(bis)) {
+            return (Id) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
