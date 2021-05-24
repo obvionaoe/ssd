@@ -5,7 +5,10 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
-import pt.up.fc.dcc.ssd.p2p.common.Config;
+import pt.up.fc.dcc.ssd.auction.BidsRepo;
+import pt.up.fc.dcc.ssd.auction.TopicsRepo;
+import pt.up.fc.dcc.ssd.blockchain.Blockchain;
+import pt.up.fc.dcc.ssd.p2p.Config;
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.grpc.*;
@@ -14,14 +17,12 @@ import pt.up.fc.dcc.ssd.p2p.routing.exceptions.RoutingTableException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import static pt.up.fc.dcc.ssd.p2p.common.Config.*;
-import static pt.up.fc.dcc.ssd.p2p.common.util.Utils.isNull;
+import static pt.up.fc.dcc.ssd.common.Utils.isNull;
+import static pt.up.fc.dcc.ssd.p2p.Config.*;
 import static pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo.fromGrpcConnectionInfo;
 import static pt.up.fc.dcc.ssd.p2p.grpc.ResponsePair.cast;
 import static pt.up.fc.dcc.ssd.p2p.grpc.RpcCall.rpc;
@@ -37,30 +38,34 @@ public class KademliaNode {
     private ConnectionInfo connectionInfo;
     private final Server server;
     public final RoutingTable routingTable;
-    private final HashMap<Id, byte[]> repository;
+    private final Blockchain blockchain;
+    private final TopicsRepo topicsRepo;
+    private final BidsRepo bidsRepo;
     private boolean started;
 
-    protected KademliaNode(Id id, String address, int port, List<KademliaImpl> kademliaImpl) {
+    protected KademliaNode(Id id, String address, int port, Blockchain blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo) {
         this.id = id;
         this.address = address;
         routingTable = new RoutingTable(id);
-        repository = new HashMap<>();
+        this.blockchain = blockchain;
+        this.topicsRepo = topicsRepo;
+        this.bidsRepo = bidsRepo;
         ServerBuilder<?> sb = ServerBuilder.forPort(port);
-        sb.addService(new KademliaImpl(routingTable, repository));
-        kademliaImpl.forEach(sb::addService);
+        sb.addService(new KademliaImpl(routingTable, blockchain, topicsRepo, bidsRepo));
         server = sb.build();
         started = false;
         // TODO: Add timer for routing table management pings
     }
 
-    protected KademliaNode(Id id, String address, List<KademliaImpl> kademliaImpl) {
+    protected KademliaNode(Id id, String address, Blockchain blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo) {
         this.id = id;
         this.address = address;
         routingTable = new RoutingTable(id);
-        repository = new HashMap<>();
+        this.blockchain = blockchain;
+        this.topicsRepo = topicsRepo;
+        this.bidsRepo = bidsRepo;
         ServerBuilder<?> sb = ServerBuilder.forPort(0);
-        sb.addService(new KademliaImpl(routingTable, repository));
-        kademliaImpl.forEach(sb::addService);
+        sb.addService(new KademliaImpl(routingTable, blockchain, topicsRepo, bidsRepo));
         server = sb.build();
         // TODO: Add timer for routing table management pings
     }
@@ -415,7 +420,9 @@ public class KademliaNode {
         private Integer port = 0;
         private String address = "localhost";
         private NodeType type = NODE;
-        private final ArrayList<KademliaImpl> implementations = new ArrayList<>();
+        private Blockchain blockchain;
+        private TopicsRepo topicsRepo;
+        private BidsRepo bidsRepo;
 
         private Builder() {
         }
@@ -453,13 +460,18 @@ public class KademliaNode {
             return this;
         }
 
-        public Builder addService(KademliaImpl kademliaImpl) {
-            implementations.add(kademliaImpl);
+        public Builder addBlockchainRepo(Blockchain blockchain) {
+            this.blockchain = blockchain;
             return this;
         }
 
-        public Builder addServices(KademliaImpl... kademliaImpl) {
-            implementations.addAll(Arrays.asList(kademliaImpl));
+        public Builder addTopicRepo(TopicsRepo topicsRepo) {
+            this.topicsRepo = topicsRepo;
+            return this;
+        }
+
+        public Builder addBidsRepo(BidsRepo bidsRepo) {
+            this.bidsRepo = bidsRepo;
             return this;
         }
 
@@ -482,11 +494,11 @@ public class KademliaNode {
         public KademliaNode build() {
             switch (type) {
                 case BOOTSTRAP_NODE:
-                    return new KademliaNode(BOOTSTRAP_NODE_ID, BOOTSTRAP_NODE_ADDR, BOOTSTRAP_NODE_PORT, implementations);
+                    return new KademliaNode(BOOTSTRAP_NODE_ID, BOOTSTRAP_NODE_ADDR, BOOTSTRAP_NODE_PORT, blockchain, topicsRepo, bidsRepo);
                 case NODE:
                 default:
-                    return isNull(port) ? new KademliaNode(id, address, implementations)
-                        : new KademliaNode(id, address, port, implementations);
+                    return isNull(port) ? new KademliaNode(id, address, blockchain, topicsRepo, bidsRepo)
+                        : new KademliaNode(id, address, port, blockchain, topicsRepo, bidsRepo);
             }
         }
     }

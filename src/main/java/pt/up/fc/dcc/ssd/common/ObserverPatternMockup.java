@@ -1,7 +1,7 @@
-package pt.up.fc.dcc.ssd.p2p;
+package pt.up.fc.dcc.ssd.common;
 
-import pt.up.fc.dcc.ssd.p2p.common.util.Observable;
-import pt.up.fc.dcc.ssd.p2p.common.util.Observer;
+import pt.up.fc.dcc.ssd.blockchain.Blockchain;
+import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,11 +44,13 @@ public class ObserverPatternMockup {
 
     public static void main(String[] args) {
         ObserverClass observer = new ObserverClass();
-        ObservableClass observable = new ObservableClass();
+        Blockchain observable = new Blockchain();
 
         observable.registerObserver(observer);
 
-        observable.setBid("example");
+        KademliaNode node = KademliaNode.newBuilder().addBlockchainRepo(observable).build();
+
+        observable.addBlock(new Block());
 
         System.out.println(observer.bid);
     }

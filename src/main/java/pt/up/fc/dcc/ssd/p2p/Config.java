@@ -1,4 +1,4 @@
-package pt.up.fc.dcc.ssd.p2p.common;
+package pt.up.fc.dcc.ssd.p2p;
 
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 

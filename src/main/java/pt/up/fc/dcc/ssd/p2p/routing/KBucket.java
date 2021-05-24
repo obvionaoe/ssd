@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static pt.up.fc.dcc.ssd.p2p.common.Config.MAX_BUCKET_SIZE;
-import static pt.up.fc.dcc.ssd.p2p.common.Config.MAX_DISTANCE;
+import static pt.up.fc.dcc.ssd.p2p.Config.MAX_BUCKET_SIZE;
+import static pt.up.fc.dcc.ssd.p2p.Config.MAX_DISTANCE;
 
 // TODO: implement replacement cache
 public class KBucket {
