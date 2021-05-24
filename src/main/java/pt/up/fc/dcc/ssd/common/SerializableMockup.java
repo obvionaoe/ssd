@@ -1,4 +1,4 @@
-package pt.up.fc.dcc.ssd.p2p;
+package pt.up.fc.dcc.ssd.common;
 
 import java.io.*;
 

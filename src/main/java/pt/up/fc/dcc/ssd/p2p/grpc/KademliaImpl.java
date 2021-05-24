@@ -3,18 +3,21 @@ package pt.up.fc.dcc.ssd.p2p.grpc;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+import pt.up.fc.dcc.ssd.auction.BidsRepo;
+import pt.up.fc.dcc.ssd.auction.TopicsRepo;
+import pt.up.fc.dcc.ssd.blockchain.Blockchain;
+import pt.up.fc.dcc.ssd.common.Observable;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.routing.RoutingTable;
 import pt.up.fc.dcc.ssd.p2p.routing.exceptions.RoutingTableException;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.grpc.Status.INTERNAL;
 import static io.grpc.Status.INVALID_ARGUMENT;
-import static pt.up.fc.dcc.ssd.p2p.common.util.Utils.isNotNull;
+import static pt.up.fc.dcc.ssd.common.Utils.isNotNull;
 import static pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo.fromGrpcConnectionInfo;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.*;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Validation.validateRequest;
@@ -25,11 +28,15 @@ import static pt.up.fc.dcc.ssd.p2p.node.Id.idFromBinaryString;
  */
 public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
     private final RoutingTable routingTable;
-    private final HashMap<Id, byte[]> repository;
+    private final Blockchain blockchain;
+    private final TopicsRepo topicsRepo;
+    private final BidsRepo bidsRepo;
 
-    public KademliaImpl(RoutingTable routingTable, HashMap<Id, byte[]> repository) {
+    public KademliaImpl(RoutingTable routingTable, Blockchain blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo) {
         this.routingTable = routingTable;
-        this.repository = repository;
+        this.blockchain = blockchain;
+        this.topicsRepo = topicsRepo;
+        this.bidsRepo = bidsRepo;
     }
 
     @Override
@@ -70,8 +77,10 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
 
         StoreResponse.Builder response = StoreResponse.newBuilder();
 
+        Observable repo = getRepo(request.getDataType());
+
         // TODO: should have keepAlive time
-        if (isNotNull(repository.put(idFromBinaryString(data.getKey()), data.getValue().toByteArray()))) {
+        if (isNotNull(repo.put(idFromBinaryString(data.getKey()), data.getValue().toByteArray()))) {
             response.setStatus(ACCEPTED);
         } else {
             response.setStatus(FAILED);
@@ -123,11 +132,13 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
 
         FindValueResponse.Builder response = FindValueResponse.newBuilder();
 
-        if (repository.containsKey(key)) {
+        Observable repo = getRepo(request.getDataType());
+
+        if (repo.containsKey(key)) {
             Data data = Data
                     .newBuilder()
                     .setKey(request.getKey())
-                    .setValue(ByteString.copyFrom(repository.get(key)))
+                    .setValue(ByteString.copyFrom(repo.get(key)))
                     .build();
 
             responseObserver.onNext(response
@@ -165,5 +176,9 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
     @Override
     public void gossip(GossipRequest request, StreamObserver<GossipResponse> responseObserver) {
         // TODO
+    }
+
+    private Observable getRepo(DataType dataType) {
+        return dataType.equals(DataType.BID) ? bidsRepo : dataType.equals(DataType.TOPIC) ? topicsRepo : blockchain;
     }
 }

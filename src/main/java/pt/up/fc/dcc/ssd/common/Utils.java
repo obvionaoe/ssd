@@ -1,4 +1,4 @@
-package pt.up.fc.dcc.ssd.p2p.common.util;
+package pt.up.fc.dcc.ssd.common;
 
 public class Utils {
     public static boolean isNull(Object o) {

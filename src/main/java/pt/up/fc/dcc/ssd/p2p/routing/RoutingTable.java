@@ -1,6 +1,6 @@
 package pt.up.fc.dcc.ssd.p2p.routing;
 
-import pt.up.fc.dcc.ssd.p2p.common.Config;
+import pt.up.fc.dcc.ssd.p2p.Config;
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
@@ -14,8 +14,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static pt.up.fc.dcc.ssd.p2p.common.Config.ID_N_BITS;
-import static pt.up.fc.dcc.ssd.p2p.common.Config.MAX_BUCKET_SIZE;
+import static pt.up.fc.dcc.ssd.p2p.Config.ID_N_BITS;
+import static pt.up.fc.dcc.ssd.p2p.Config.MAX_BUCKET_SIZE;
 
 // is this a tree? I dont think so my dude
 // FIXME: duplicate nodes appearing in routing table sigh

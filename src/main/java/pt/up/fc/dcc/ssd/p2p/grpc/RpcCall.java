@@ -10,7 +10,7 @@ import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.grpc.KademliaGrpc.KademliaBlockingStub;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
-import static pt.up.fc.dcc.ssd.p2p.common.util.Utils.isNull;
+import static pt.up.fc.dcc.ssd.common.Utils.isNull;
 import static pt.up.fc.dcc.ssd.p2p.grpc.ResponsePair.pair;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.FAILED;
 

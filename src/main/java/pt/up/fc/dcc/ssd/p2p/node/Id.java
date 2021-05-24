@@ -9,7 +9,7 @@ import java.util.BitSet;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
-import static pt.up.fc.dcc.ssd.p2p.common.Config.ID_N_BITS;
+import static pt.up.fc.dcc.ssd.p2p.Config.ID_N_BITS;
 
 public class Id implements Serializable {
     public final long serialVersionUID = 1L;
