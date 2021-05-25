@@ -6,10 +6,9 @@ import pt.up.fc.dcc.ssd.common.Observer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Bid implements Observable {
+public class Topic implements Observable {
+
     private List<Observer> observers = new ArrayList<>();
-    private long timestamp;
-    private String bid;
     private String topic;
 
     @Override
@@ -24,11 +23,11 @@ public class Bid implements Observable {
 
     @Override
     public void notifyObservers() {
-        observers.forEach(observer -> observer.update(bid));
+        observers.forEach(observer -> observer.update(topic));
     }
 
-    public void setBid(String bid) {
-        this.bid = bid;
+    public void setTopic(String topic) {
+        this.topic = topic;
         notifyObservers();
     }
 }

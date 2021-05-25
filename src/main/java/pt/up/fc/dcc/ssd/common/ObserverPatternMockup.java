@@ -1,6 +1,5 @@
 package pt.up.fc.dcc.ssd.common;
 
-import pt.up.fc.dcc.ssd.blockchain.Blockchain;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 
 import java.util.ArrayList;
