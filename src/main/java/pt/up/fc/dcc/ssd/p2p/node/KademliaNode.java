@@ -7,7 +7,6 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import pt.up.fc.dcc.ssd.auction.BidsRepo;
 import pt.up.fc.dcc.ssd.auction.TopicsRepo;
-import pt.up.fc.dcc.ssd.blockchain.Blockchain;
 import pt.up.fc.dcc.ssd.p2p.Config;
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
