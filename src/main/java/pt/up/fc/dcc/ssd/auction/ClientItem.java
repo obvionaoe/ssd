@@ -18,27 +18,5 @@ public class ClientItem implements Serializable {
         this.bid = bid;
         this.item = item;
     }
-
-    public byte[] toByteArray() {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            ObjectOutputStream out = new ObjectOutputStream(bos);
-            out.writeObject(this);
-            out.flush();
-            return bos.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public static ClientItem toObject(byte[] arr) {
-        ByteArrayInputStream bis = new ByteArrayInputStream(arr);
-        try (ObjectInput in = new ObjectInputStream(bis)) {
-            return (ClientItem) in.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 }
 
