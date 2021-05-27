@@ -1,19 +1,14 @@
 package pt.up.fc.dcc.ssd.common;
 
+import pt.up.fc.dcc.ssd.p2p.node.Id;
+
 import java.io.*;
 
-public class SerializableMockup implements Serializable {
-    public final long serialVersionUID = 1L;
-    String test;
-
-    public SerializableMockup(String test) {
-        this.test = test;
-    }
-
-    public byte[] toByteArray() {
+public class Serializable {
+    public static byte[] toByteArray(Object object) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             ObjectOutputStream out = new ObjectOutputStream(bos);
-            out.writeObject(this);
+            out.writeObject(object);
             out.flush();
             return bos.toByteArray();
         } catch (IOException e) {
@@ -22,10 +17,10 @@ public class SerializableMockup implements Serializable {
         }
     }
 
-    public static SerializableMockup toObject(byte[] arr) {
+    public static Object toObject(byte[] arr) {
         ByteArrayInputStream bis = new ByteArrayInputStream(arr);
         try (ObjectInput in = new ObjectInputStream(bis)) {
-            return (SerializableMockup) in.readObject();
+            return in.readObject();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
             return null;
@@ -33,10 +28,13 @@ public class SerializableMockup implements Serializable {
     }
 
     public static void main(String[] args) {
-        SerializableMockup sm = new SerializableMockup("teste");
+        // Example
+        Id test = new Id();
 
-        System.out.println(sm.test);
+        System.out.println(test);
 
-        System.out.println(SerializableMockup.toObject(sm.toByteArray()).test);
+        Id d = (Id) toObject(toByteArray(test));
+
+        System.out.println(d);
     }
 }

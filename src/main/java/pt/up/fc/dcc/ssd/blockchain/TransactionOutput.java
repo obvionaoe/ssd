@@ -1,4 +1,6 @@
-import java.security.*;
+package pt.up.fc.dcc.ssd.blockchain;
+
+import java.security.PublicKey;
 
 public class TransactionOutput {
     public String id;
