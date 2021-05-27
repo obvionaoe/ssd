@@ -1,8 +1,10 @@
 package pt.up.fc.dcc.ssd.auction;
+
 import pt.up.fc.dcc.ssd.p2p.node.Id;
+
 import java.nio.charset.StandardCharsets;
-import java.util.logging.Logger;
 import java.util.Scanner;
+import java.util.logging.Logger;
 public class Client {
     private static final Logger logger = Logger.getLogger(Client.class.getName());
 
@@ -44,8 +46,6 @@ public class Client {
 
             Scanner scan = new Scanner(System.in);
             String newBid = scan.nextLine();
-
-            clientNode.kademlia.
 
         }
 

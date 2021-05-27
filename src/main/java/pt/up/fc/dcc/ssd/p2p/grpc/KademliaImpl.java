@@ -5,7 +5,8 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import pt.up.fc.dcc.ssd.auction.BidsRepo;
 import pt.up.fc.dcc.ssd.auction.TopicsRepo;
-import pt.up.fc.dcc.ssd.common.Observable;
+import pt.up.fc.dcc.ssd.blockchain.Blockchain;
+import pt.up.fc.dcc.ssd.common.Repository;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.routing.RoutingTable;
@@ -16,7 +17,6 @@ import java.util.stream.Collectors;
 
 import static io.grpc.Status.INTERNAL;
 import static io.grpc.Status.INVALID_ARGUMENT;
-import static pt.up.fc.dcc.ssd.common.Utils.isNotNull;
 import static pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo.fromGrpcConnectionInfo;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.*;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Validation.validateRequest;
@@ -76,10 +76,10 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
 
         StoreResponse.Builder response = StoreResponse.newBuilder();
 
-        Observable repo = getRepo(request.getDataType());
+        Repository repo = getRepo(request.getDataType());
 
         // TODO: should have keepAlive time
-        if (isNotNull(repo.put(idFromBinaryString(data.getKey()), data.getValue().toByteArray()))) {
+        if (repo.put(idFromBinaryString(data.getKey()), data.getValue().toByteArray())) {
             response.setStatus(ACCEPTED);
         } else {
             response.setStatus(FAILED);
@@ -131,7 +131,7 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
 
         FindValueResponse.Builder response = FindValueResponse.newBuilder();
 
-        Observable repo = getRepo(request.getDataType());
+        Repository repo = getRepo(request.getDataType());
 
         if (repo.containsKey(key)) {
             Data data = Data
@@ -177,7 +177,7 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         // TODO
     }
 
-    private Observable getRepo(DataType dataType) {
+    private Repository getRepo(DataType dataType) {
         return dataType.equals(DataType.BID) ? bidsRepo : dataType.equals(DataType.TOPIC) ? topicsRepo : blockchain;
     }
 }

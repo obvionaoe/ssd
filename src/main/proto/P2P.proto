@@ -42,6 +42,7 @@ message FindNodeRequest {
 message FindValueRequest {
   string key = 1;
   GrpcConnectionInfo originConnectionInfo = 2;
+  DataType dataType = 3;
 }
 
 message LeaveRequest {
@@ -100,7 +101,6 @@ message Data {
   bytes value = 2;
 }
 
-// TODO: Needed?
 enum DataType {
   BLOCK = 0;
   TOPIC = 1;

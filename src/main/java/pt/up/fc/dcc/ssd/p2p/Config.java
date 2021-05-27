@@ -1,8 +1,10 @@
 package pt.up.fc.dcc.ssd.p2p;
 
-import pt.up.fc.dcc.ssd.p2p.node.ID;
+import pt.up.fc.dcc.ssd.p2p.node.Id;
 
 import java.math.BigInteger;
+
+import static pt.up.fc.dcc.ssd.p2p.node.Id.idFromBinaryString;
 
 public class Config {
     // CONSTANTS
@@ -14,7 +16,7 @@ public class Config {
     public static final int MAX_BUCKET_SIZE = 20;
 
     // BOOTSTRAP
-    public static final ID BOOTSTRAP_NODE_ID = ID.fromString(
+    public static final Id BOOTSTRAP_NODE_ID = idFromBinaryString(
             "1100001000000110000110000000110000010001100111000010110101110001011101000111111011100110111000001010001010101010111000110000100101000011000001001100010100110001"
     );
     public static final String BOOTSTRAP_NODE_ADDR = "localhost";

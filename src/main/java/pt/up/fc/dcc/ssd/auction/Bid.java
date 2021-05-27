@@ -1,8 +1,5 @@
 package pt.up.fc.dcc.ssd.auction;
 
-import pt.up.fc.dcc.ssd.common.Observable;
-import pt.up.fc.dcc.ssd.common.Observer;
-
 import java.util.ArrayList;
 import java.util.List;
 

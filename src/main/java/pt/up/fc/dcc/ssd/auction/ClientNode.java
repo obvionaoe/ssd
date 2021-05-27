@@ -1,14 +1,7 @@
 package pt.up.fc.dcc.ssd.auction;
 
-import io.grpc.Channel;
-import io.grpc.ManagedChannelBuilder;
-import pt.up.fc.dcc.ssd.common.Observer;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
-
-import java.io.*;
-
-import static pt.up.fc.dcc.ssd.p2p.node.Id.idFromData;
 
 public class ClientNode {
     public String role;
