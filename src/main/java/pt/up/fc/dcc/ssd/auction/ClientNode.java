@@ -1,29 +1,31 @@
 package pt.up.fc.dcc.ssd.auction;
 
+import pt.up.fc.dcc.ssd.blockchain.BlockchainRepo;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
-
+import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
+import static pt.up.fc.dcc.ssd.common.Serializable.toObject;
 public class ClientNode {
     public String role;
     public KademliaNode kademlia;
     public ClientItem item;
+    public BidsRepo bidsRepo;
+    public TopicsRepo topicsRepo;
+    public BlockchainRepo blockchainRepo;
 
     public ClientNode(String role, Id topic, String bid, String item ) {
-        BidsRepo bidObserver = new BidsRepo();
-        Bid bidObservable = new Bid();
-        bidObservable.registerObserver(bidObserver);
-        bidObservable.setBid(bid);
+        bidsRepo = new BidsRepo();
+        topicsRepo = new TopicsRepo();
+        blockchainRepo = new BlockchainRepo();
 
-        TopicsRepo topicObserver = new TopicsRepo();
-        Topic topicObservable = new Topic();
-        topicObservable.registerObserver(topicObserver);
-        topicObservable.setTopic(topic.toString());
+        bidsRepo.put(topic, toByteArray(bid));
+        topicsRepo.put(topic, toByteArray(item));
 
         kademlia = KademliaNode
             .newBuilder()
-            .addBlockchainRepo(observable)
-            .addBidsRepo(bidObserver)
-            .addTopicRepo(topicObserver)
+            .addBlockchainRepo(blockchainRepo)
+            .addBidsRepo(bidsRepo)
+            .addTopicRepo(topicsRepo)
             .build();
         this.role = role;
         this.item = new ClientItem(kademlia.getId(), topic , bid, item);

@@ -1,11 +1,24 @@
 package pt.up.fc.dcc.ssd.auction;
 
-public class BidsRepo implements Observer {
-    String bid;
+import pt.up.fc.dcc.ssd.common.Repository;
+import pt.up.fc.dcc.ssd.p2p.node.Id;
+
+import java.io.Serializable;
+
+public class BidsRepo implements Repository, Serializable {
 
     @Override
-    public void update(String bid) {
-        this.bid = bid;
-        System.out.println("New bid: " + bid);
+    public boolean containsKey(Id key) {
+        return false;
+    }
+
+    @Override
+    public byte[] get(Id key) {
+        return new byte[0];
+    }
+
+    @Override
+    public boolean put(Id key, byte[] byteArray) {
+        return false;
     }
 }

@@ -1,12 +1,25 @@
 package pt.up.fc.dcc.ssd.auction;
 
+import pt.up.fc.dcc.ssd.common.Pair;
+import pt.up.fc.dcc.ssd.common.Serializable;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.logging.Logger;
+
+import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
+import static pt.up.fc.dcc.ssd.common.Serializable.toObject;
+
 public class Client {
     private static final Logger logger = Logger.getLogger(Client.class.getName());
+    private static ClientNode clientNode;
+    private static Pair isBidValid(String bid, Id topic){
+        String currentBid = (String) toObject(clientNode.bidsRepo.get(topic));
+
+        return Pair.pair((Float.parseFloat(bid) > Float.parseFloat(currentBid)), currentBid);
+    }
 
     public static void main(String[] args) throws Exception {
 
@@ -24,16 +37,24 @@ public class Client {
 
         String bid = args[3];
 
-        ClientNode clientNode = new ClientNode(operation, topic, bid, item);
+        Pair isValid = isBidValid(bid, topic);
+
+        if(!(boolean)isValid.first()){
+            System.out.println("Sorry, current bid is higher: " + isValid.second());
+            System.exit(0);
+        }
+
+        clientNode = new ClientNode(operation, topic, bid, item);
 
         clientNode.kademlia.start();
 
-        if (operation == "SELL")
+        if (operation == "SELL") {
             clientNode.kademlia.store(
-                    topic, clientNode.item.toByteArray()
+                    topic, toByteArray(clientNode.item)
             );
-        else if (operation == "BUY") {
-            ClientItem sellerID = ClientItem.toObject(
+
+        }else if (operation == "BUY") {
+            ClientItem sellerID = (ClientItem) toObject(
                     clientNode.kademlia.findValue(topic)
             );
         }
@@ -46,6 +67,10 @@ public class Client {
 
             Scanner scan = new Scanner(System.in);
             String newBid = scan.nextLine();
+            isValid = isBidValid(newBid, topic);
+            if(!(boolean)isValid.first()){
+                System.out.println("Sorry, current bid is higher: " + isValid.second());
+            }
 
         }
 
