@@ -4,10 +4,13 @@ import com.google.rpc.Code;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.StatusRuntimeException;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.stub.StreamObserver;
 import pt.up.fc.dcc.ssd.auction.BidsRepo;
 import pt.up.fc.dcc.ssd.auction.TopicsRepo;
 import pt.up.fc.dcc.ssd.blockchain.Blockchain;
+import pt.up.fc.dcc.ssd.common.Pair;
 import pt.up.fc.dcc.ssd.p2p.Config;
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
@@ -15,20 +18,22 @@ import pt.up.fc.dcc.ssd.p2p.grpc.*;
 import pt.up.fc.dcc.ssd.p2p.routing.RoutingTable;
 import pt.up.fc.dcc.ssd.p2p.routing.exceptions.RoutingTableException;
 
+import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import static pt.up.fc.dcc.ssd.common.Pair.cast;
 import static pt.up.fc.dcc.ssd.common.Utils.isNull;
 import static pt.up.fc.dcc.ssd.p2p.Config.*;
 import static pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo.fromGrpcConnectionInfo;
-import static pt.up.fc.dcc.ssd.p2p.grpc.ResponsePair.cast;
 import static pt.up.fc.dcc.ssd.p2p.grpc.RpcCall.rpc;
 import static pt.up.fc.dcc.ssd.p2p.grpc.RpcType.*;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.*;
 import static pt.up.fc.dcc.ssd.p2p.node.NodeType.NODE;
+import static pt.up.fc.dcc.ssd.p2p.security.Ssl.loadServerTlsCredentials;
 
 public class KademliaNode {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
@@ -43,28 +48,28 @@ public class KademliaNode {
     private final BidsRepo bidsRepo;
     private boolean started;
 
-    protected KademliaNode(Id id, String address, int port, Blockchain blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo) {
+    protected KademliaNode(Id id, String address, int port, Blockchain blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo, SslContext sslContext) {
         this.id = id;
         this.address = address;
         routingTable = new RoutingTable(id);
         this.blockchain = blockchain;
         this.topicsRepo = topicsRepo;
         this.bidsRepo = bidsRepo;
-        ServerBuilder<?> sb = ServerBuilder.forPort(port);
+        ServerBuilder<?> sb = NettyServerBuilder.forPort(port).sslContext(sslContext);
         sb.addService(new KademliaImpl(routingTable, blockchain, topicsRepo, bidsRepo));
         server = sb.build();
         started = false;
         // TODO: Add timer for routing table management pings
     }
 
-    protected KademliaNode(Id id, String address, Blockchain blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo) {
+    protected KademliaNode(Id id, String address, Blockchain blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo, SslContext sslContext) {
         this.id = id;
         this.address = address;
         routingTable = new RoutingTable(id);
         this.blockchain = blockchain;
         this.topicsRepo = topicsRepo;
         this.bidsRepo = bidsRepo;
-        ServerBuilder<?> sb = ServerBuilder.forPort(0);
+        ServerBuilder<?> sb = NettyServerBuilder.forPort(0).sslContext(sslContext);
         sb.addService(new KademliaImpl(routingTable, blockchain, topicsRepo, bidsRepo));
         server = sb.build();
         // TODO: Add timer for routing table management pings
@@ -156,7 +161,7 @@ public class KademliaNode {
 
         routingTable.update(destinationId, destinationConnectionInfo);
 
-        ResponsePair<Status, FindNodeResponse> responsePair = cast(rpc()
+        Pair<Status, FindNodeResponse> pair = cast(rpc()
                 .withOriginConnInfo(connectionInfo)
                 .withDestConnInfo(destinationConnectionInfo)
                 .type(FIND_NODE)
@@ -167,8 +172,8 @@ public class KademliaNode {
         );
 
         try {
-            return addResultsAndPing(fromGrpcConnectionInfo(responsePair
-                .response()
+            return addResultsAndPing(fromGrpcConnectionInfo(pair
+                .second()
                 .getConnectionInfosList())
             );
         } catch (StatusRuntimeException e) {
@@ -211,7 +216,7 @@ public class KademliaNode {
             }
 
             try {
-                ResponsePair<Status, PingResponse> responsePair = cast(rpc()
+                Pair<Status, PingResponse> pair = cast(rpc()
                         .withOriginConnInfo(connectionInfo)
                         .withDestConnInfo(closestInfo)
                         .type(PING)
@@ -220,7 +225,7 @@ public class KademliaNode {
                     PingResponse.class
                 );
 
-                if (responsePair.status().equals(PONG)) {
+                if (pair.first().equals(PONG)) {
                     routingTable.update(closestInfo);
                     return true;
                 } else {
@@ -279,7 +284,7 @@ public class KademliaNode {
             }
 
             for (DistancedConnectionInfo info : closestInfosList) {
-                ResponsePair<Status, FindNodeResponse> responsePair = cast(rpc()
+                Pair<Status, FindNodeResponse> pair = cast(rpc()
                         .withOriginConnInfo(connectionInfo)
                         .withDestConnInfo(info)
                         .type(FIND_NODE)
@@ -289,8 +294,8 @@ public class KademliaNode {
                     FindNodeResponse.class
                 );
 
-                List<DistancedConnectionInfo> receivedInfos = fromGrpcConnectionInfo(responsePair
-                    .response()
+                List<DistancedConnectionInfo> receivedInfos = fromGrpcConnectionInfo(pair
+                    .second()
                     .getConnectionInfosList()
                 );
 
@@ -335,7 +340,7 @@ public class KademliaNode {
             for (int i = 0; i <= closestInfosList.size() - 1; i++) {
                 DistancedConnectionInfo info = closestInfosList.get(i);
 
-                ResponsePair<Status, FindValueResponse> responsePair = cast(rpc()
+                Pair<Status, FindValueResponse> pair = cast(rpc()
                         .withOriginConnInfo(connectionInfo)
                         .withDestConnInfo(info)
                         .type(FIND_VALUE)
@@ -345,12 +350,12 @@ public class KademliaNode {
                     FindValueResponse.class
                 );
 
-                if (responsePair.status().equals(FOUND)) {
-                    Data data = responsePair.response().getData();
+                if (pair.first().equals(FOUND)) {
+                    Data data = pair.second().getData();
                     return data.getValue().toByteArray();
-                } else if (responsePair.status().equals(NOT_FOUND)) {
-                    List<DistancedConnectionInfo> receivedInfos = fromGrpcConnectionInfo(responsePair
-                        .response()
+                } else if (pair.first().equals(NOT_FOUND)) {
+                    List<DistancedConnectionInfo> receivedInfos = fromGrpcConnectionInfo(pair
+                        .second()
                         .getConnectionInfosList()
                     );
 
@@ -386,7 +391,7 @@ public class KademliaNode {
         try {
             List<DistancedConnectionInfo> closestInfoList = routingTable.findClosest(key);
 
-            List<ResponsePair<Status, StoreResponse>> responses = new ArrayList<>();
+            List<Pair<Status, StoreResponse>> responses = new ArrayList<>();
 
             closestInfoList.forEach(info ->
                 responses.add(cast(rpc()
@@ -400,7 +405,7 @@ public class KademliaNode {
                 )
             );
 
-            return responses.stream().anyMatch(responsePair -> responsePair.status().equals(ACCEPTED));
+            return responses.stream().anyMatch(pair -> pair.first().equals(ACCEPTED));
         } catch (RoutingTableException e) {
             logger.warning(e.getMessage());
             return false;
@@ -491,14 +496,15 @@ public class KademliaNode {
          *
          * @return the KademliaNode
          */
-        public KademliaNode build() {
+        public KademliaNode build() throws SSLException {
+            SslContext sslContext = loadServerTlsCredentials();
             switch (type) {
                 case BOOTSTRAP_NODE:
-                    return new KademliaNode(BOOTSTRAP_NODE_ID, BOOTSTRAP_NODE_ADDR, BOOTSTRAP_NODE_PORT, blockchain, topicsRepo, bidsRepo);
+                    return new KademliaNode(BOOTSTRAP_NODE_ID, BOOTSTRAP_NODE_ADDR, BOOTSTRAP_NODE_PORT, blockchain, topicsRepo, bidsRepo, sslContext);
                 case NODE:
                 default:
-                    return isNull(port) ? new KademliaNode(id, address, blockchain, topicsRepo, bidsRepo)
-                        : new KademliaNode(id, address, port, blockchain, topicsRepo, bidsRepo);
+                    return isNull(port) ? new KademliaNode(id, address, blockchain, topicsRepo, bidsRepo, sslContext)
+                        : new KademliaNode(id, address, port, blockchain, topicsRepo, bidsRepo, sslContext);
             }
         }
     }

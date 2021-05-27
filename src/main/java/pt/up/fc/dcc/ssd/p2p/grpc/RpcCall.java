@@ -3,16 +3,21 @@ package pt.up.fc.dcc.ssd.p2p.grpc;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.GeneratedMessageV3;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
+import pt.up.fc.dcc.ssd.common.Pair;
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.grpc.KademliaGrpc.KademliaBlockingStub;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
+import javax.net.ssl.SSLException;
+
+import static pt.up.fc.dcc.ssd.common.Pair.pair;
 import static pt.up.fc.dcc.ssd.common.Utils.isNull;
-import static pt.up.fc.dcc.ssd.p2p.grpc.ResponsePair.pair;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.FAILED;
+import static pt.up.fc.dcc.ssd.p2p.security.Ssl.loadClientTlsCredentials;
 
 //TODO: add comments
 
@@ -75,7 +80,7 @@ public class RpcCall {
      * @return a ResponsePair with the status and the response
      * @throws NullPointerException if a
      */
-    public ResponsePair<Status, GeneratedMessageV3> call() throws NullPointerException {
+    public Pair<Status, GeneratedMessageV3> call() throws NullPointerException {
         if (isNull(destinationConnectionInfo)) {
             throw new NullPointerException("Missing destination connection information!");
         }
@@ -89,11 +94,12 @@ public class RpcCall {
         }
 
         ManagedChannel channel = null;
-        ResponsePair<Status, GeneratedMessageV3> responsePair = null;
+        Pair<Status, GeneratedMessageV3> pair = null;
         try {
-            channel = ManagedChannelBuilder
+            SslContext sslContext = loadClientTlsCredentials();
+            channel = NettyChannelBuilder
                     .forAddress(destinationConnectionInfo.getAddress(), destinationConnectionInfo.getPort())
-                    .usePlaintext()
+                    .sslContext(sslContext)
                     .build();
 
             if (isNull(stub)) {
@@ -111,7 +117,7 @@ public class RpcCall {
                             .build()
                     );
 
-                    responsePair = pair(pingResponse.getStatus(), pingResponse);
+                    pair = pair(pingResponse.getStatus(), pingResponse);
                     break;
                 case STORE:
                     if (isNull(data)) {
@@ -127,7 +133,7 @@ public class RpcCall {
                             .build()
                     );
 
-                    responsePair = pair(storeResponse.getStatus(), storeResponse);
+                    pair = pair(storeResponse.getStatus(), storeResponse);
                     break;
                 case FIND_NODE:
                     if (isNull(idToFind)) {
@@ -144,7 +150,7 @@ public class RpcCall {
                             .build()
                     );
 
-                    responsePair = pair(null, findNodeResponse);
+                    pair = pair(null, findNodeResponse);
                     break;
                 case FIND_VALUE:
                     if (isNull(idToFind)) {
@@ -161,7 +167,7 @@ public class RpcCall {
                             .build()
                     );
 
-                    responsePair = pair(findValueResponse.getStatus(), findValueResponse);
+                    pair = pair(findValueResponse.getStatus(), findValueResponse);
                     break;
                 case LEAVE:
                     if (isNull(idToFind)) {
@@ -174,7 +180,7 @@ public class RpcCall {
                             .build()
                     );
 
-                    responsePair = pair(leaveResponse.getStatus(), leaveResponse);
+                    pair = pair(leaveResponse.getStatus(), leaveResponse);
                     break;
                 case GOSSIP:
                     if (isNull(data)) {
@@ -186,17 +192,17 @@ public class RpcCall {
                             .build()
                     );
 
-                    responsePair = pair(gossipResponse.getStatus(), gossipResponse);
+                    pair = pair(gossipResponse.getStatus(), gossipResponse);
                     break;
             }
-        } catch (StatusRuntimeException e) {
-            responsePair = pair(FAILED, null);
+        } catch (StatusRuntimeException | SSLException e) {
+            pair = pair(FAILED, null);
         } finally {
             if (channel != null) {
                 channel.shutdownNow();
             }
         }
 
-        return responsePair;
+        return pair;
     }
 }
