@@ -20,8 +20,8 @@ public class ClientNode {
         topicsRepo = new TopicsRepo();
         blockchainRepo = new BlockchainRepo();
 
-        bidsRepo.put(topic, toByteArray(bid));
-        topicsRepo.put(topic, toByteArray(item));
+        bidsRepo.put(topic, toByteArray(new Bid(bid, topic)));
+        topicsRepo.put(topic, toByteArray(new Topic(topic, item)));
 
         kademlia = KademliaNode
             .newBuilder()

@@ -1,9 +1,13 @@
 package pt.up.fc.dcc.ssd.auction;
 
-public class Topic {
-    private String topic;
+import pt.up.fc.dcc.ssd.p2p.node.Id;
 
-    public void setTopic(String topic) {
+public class Topic {
+    private Id topic;
+    private String item;
+
+    Topic(Id topic, String item){
         this.topic = topic;
+        this.item = item;
     }
 }
