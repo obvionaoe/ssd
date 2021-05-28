@@ -53,6 +53,7 @@ message GossipRequest {
   GrpcConnectionInfo originConnectionInfo = 1;
   repeated string visitedNodeIds = 2;
   Data data = 3;
+  DataType dataType = 4;
 }
 
 // Responses

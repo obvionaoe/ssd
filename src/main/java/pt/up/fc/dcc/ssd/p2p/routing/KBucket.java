@@ -55,8 +55,10 @@ public class KBucket {
         clone.xor(y);
 
         BigInteger result = new BigInteger(clone.toBytes());
-        if (result.compareTo(BigInteger.ZERO) < 0 || result.compareTo(MAX_DISTANCE) > 0)
+        if (result.compareTo(BigInteger.ZERO) < 0 || result.compareTo(MAX_DISTANCE) > 0) {
+            System.out.println(result);
             throw new InvalidDistanceException("The distance to the given ID is invalid");
+        }
 
         return result;
     }

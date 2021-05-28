@@ -1,6 +1,8 @@
 package pt.up.fc.dcc.ssd.blockchain;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Blockchain {
 
@@ -68,7 +70,7 @@ public class Blockchain {
 
 
 //usa POW
-    public boolean isValidNewBlock(Block newBlock, Block previousBlock) {
+    /*public boolean isValidNewBlock(Block newBlock, Block previousBlock) {
         if (newBlock != null  &&  previousBlock != null) {
             if (previousBlock.getIndex() + 1 != newBlock.getIndex()) {
                 return false;
@@ -88,7 +90,7 @@ public class Blockchain {
         }
 
       //  return false;
-    }
+    }*/
 
 
     //prof disse que não era preciso

@@ -9,7 +9,7 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.stub.StreamObserver;
 import pt.up.fc.dcc.ssd.auction.BidsRepo;
 import pt.up.fc.dcc.ssd.auction.TopicsRepo;
-import pt.up.fc.dcc.ssd.blockchain.Blockchain;
+import pt.up.fc.dcc.ssd.blockchain.BlockchainRepo;
 import pt.up.fc.dcc.ssd.common.Pair;
 import pt.up.fc.dcc.ssd.p2p.Config;
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
@@ -43,12 +43,12 @@ public class KademliaNode {
     private ConnectionInfo connectionInfo;
     private final Server server;
     public final RoutingTable routingTable;
-    private final Blockchain blockchain;
+    private final BlockchainRepo blockchain;
     private final TopicsRepo topicsRepo;
     private final BidsRepo bidsRepo;
     private boolean started;
 
-    protected KademliaNode(Id id, String address, int port, Blockchain blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo, SslContext sslContext) {
+    protected KademliaNode(Id id, String address, int port, BlockchainRepo blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo, SslContext sslContext) {
         this.id = id;
         this.address = address;
         routingTable = new RoutingTable(id);
@@ -62,7 +62,7 @@ public class KademliaNode {
         // TODO: Add timer for routing table management pings
     }
 
-    protected KademliaNode(Id id, String address, Blockchain blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo, SslContext sslContext) {
+    protected KademliaNode(Id id, String address, BlockchainRepo blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo, SslContext sslContext) {
         this.id = id;
         this.address = address;
         routingTable = new RoutingTable(id);
@@ -170,6 +170,10 @@ public class KademliaNode {
             Status.class,
             FindNodeResponse.class
         );
+
+        if (pair.first().equals(FAILED)) {
+            return false;
+        }
 
         try {
             return addResultsAndPing(fromGrpcConnectionInfo(pair
@@ -294,6 +298,10 @@ public class KademliaNode {
                     FindNodeResponse.class
                 );
 
+                if (pair.first().equals(FAILED)) {
+                    return false;
+                }
+
                 List<DistancedConnectionInfo> receivedInfos = fromGrpcConnectionInfo(pair
                     .second()
                     .getConnectionInfosList()
@@ -387,7 +395,7 @@ public class KademliaNode {
      * @param value the data in byte[]
      * @return true if at least one node successfully stored the <key, value> pair, false otherwise
      */
-    public boolean store(Id key, byte[] value) {
+    public boolean store(Id key, byte[] value, DataType dataType) {
         try {
             List<DistancedConnectionInfo> closestInfoList = routingTable.findClosest(key);
 
@@ -398,6 +406,7 @@ public class KademliaNode {
                         .withOriginConnInfo(connectionInfo)
                         .withDestConnInfo(info).type(STORE)
                         .withData(key, value)
+                        .withDataType(dataType)
                         .call(),
                     Status.class,
                     StoreResponse.class
@@ -425,7 +434,7 @@ public class KademliaNode {
         private Integer port = 0;
         private String address = "localhost";
         private NodeType type = NODE;
-        private Blockchain blockchain;
+        private BlockchainRepo blockchain;
         private TopicsRepo topicsRepo;
         private BidsRepo bidsRepo;
 
@@ -465,7 +474,7 @@ public class KademliaNode {
             return this;
         }
 
-        public Builder addBlockchainRepo(Blockchain blockchain) {
+        public Builder addBlockchainRepo(BlockchainRepo blockchain) {
             this.blockchain = blockchain;
             return this;
         }

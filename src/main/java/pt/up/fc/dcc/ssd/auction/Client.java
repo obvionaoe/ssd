@@ -1,10 +1,9 @@
 package pt.up.fc.dcc.ssd.auction;
 
 import pt.up.fc.dcc.ssd.common.Pair;
-import pt.up.fc.dcc.ssd.common.Serializable;
+import pt.up.fc.dcc.ssd.p2p.grpc.DataType;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
-import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.logging.Logger;
@@ -15,7 +14,7 @@ import static pt.up.fc.dcc.ssd.common.Serializable.toObject;
 public class Client {
     private static final Logger logger = Logger.getLogger(Client.class.getName());
     private static ClientNode clientNode;
-    private static Pair isBidValid(String bid, Id topic){
+    private static Pair<Boolean, String> isBidValid(String bid, Id topic){
         String currentBid = (String) toObject(clientNode.bidsRepo.get(topic));
 
         return Pair.pair((Float.parseFloat(bid) > Float.parseFloat(currentBid)), currentBid);
@@ -23,7 +22,7 @@ public class Client {
 
     public static void main(String[] args) throws Exception {
 
-        if (args.length != 1) {
+        if (args.length >= 1) {
             System.err.println("ERROR: Please provide a topic");
             return;
         }
@@ -37,9 +36,9 @@ public class Client {
 
         String bid = args[3];
 
-        Pair isValid = isBidValid(bid, topic);
+        Pair<Boolean, String> isValid = isBidValid(bid, topic);
 
-        if(!(boolean)isValid.first()){
+        if(!isValid.first()) {
             System.out.println("Sorry, current bid is higher: " + isValid.second());
             System.exit(0);
         }
@@ -50,10 +49,10 @@ public class Client {
 
         if (operation == "SELL") {
             clientNode.kademlia.store(
-                    topic, toByteArray(clientNode.item)
+                    topic, toByteArray(clientNode.item), DataType.TOPIC
             );
 
-        }else if (operation == "BUY") {
+        } else if (operation == "BUY") {
             ClientItem sellerID = (ClientItem) toObject(
                     clientNode.kademlia.findValue(topic)
             );

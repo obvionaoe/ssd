@@ -5,7 +5,7 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import pt.up.fc.dcc.ssd.auction.BidsRepo;
 import pt.up.fc.dcc.ssd.auction.TopicsRepo;
-import pt.up.fc.dcc.ssd.blockchain.Blockchain;
+import pt.up.fc.dcc.ssd.blockchain.BlockchainRepo;
 import pt.up.fc.dcc.ssd.common.Repository;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
@@ -27,11 +27,11 @@ import static pt.up.fc.dcc.ssd.p2p.node.Id.idFromBinaryString;
  */
 public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
     private final RoutingTable routingTable;
-    private final Blockchain blockchain;
+    private final BlockchainRepo blockchain;
     private final TopicsRepo topicsRepo;
     private final BidsRepo bidsRepo;
 
-    public KademliaImpl(RoutingTable routingTable, Blockchain blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo) {
+    public KademliaImpl(RoutingTable routingTable, BlockchainRepo blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo) {
         this.routingTable = routingTable;
         this.blockchain = blockchain;
         this.topicsRepo = topicsRepo;

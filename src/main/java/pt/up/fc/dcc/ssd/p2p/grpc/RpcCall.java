@@ -16,6 +16,7 @@ import javax.net.ssl.SSLException;
 
 import static pt.up.fc.dcc.ssd.common.Pair.pair;
 import static pt.up.fc.dcc.ssd.common.Utils.isNull;
+import static pt.up.fc.dcc.ssd.p2p.grpc.Status.ACCEPTED;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.FAILED;
 import static pt.up.fc.dcc.ssd.p2p.security.Ssl.loadClientTlsCredentials;
 
@@ -31,6 +32,7 @@ public class RpcCall {
     private RpcType type;
     private Id idToFind;
     private Data data;
+    private DataType dataType;
 
     private RpcCall() {
     }
@@ -66,11 +68,16 @@ public class RpcCall {
 
     public RpcCall withData(Id key, byte[] value) {
         data = Data
-                .newBuilder()
-                .setKey(key.toBinaryString())
-                .setValue(ByteString.copyFrom(value))
-                .build();
+            .newBuilder()
+            .setKey(key.toBinaryString())
+            .setValue(ByteString.copyFrom(value))
+            .build();
 
+        return this;
+    }
+
+    public RpcCall withDataType(DataType dataType) {
+        this.dataType = dataType;
         return this;
     }
 
@@ -98,9 +105,9 @@ public class RpcCall {
         try {
             SslContext sslContext = loadClientTlsCredentials();
             channel = NettyChannelBuilder
-                    .forAddress(destinationConnectionInfo.getAddress(), destinationConnectionInfo.getPort())
-                    .sslContext(sslContext)
-                    .build();
+                .forAddress(destinationConnectionInfo.getAddress(), destinationConnectionInfo.getPort())
+                .sslContext(sslContext)
+                .build();
 
             if (isNull(stub)) {
                 stub = KademliaGrpc.newBlockingStub(channel);
@@ -109,28 +116,29 @@ public class RpcCall {
             switch (type) {
                 case PING:
                     PingResponse pingResponse = stub.ping(PingRequest
-                            .newBuilder()
-                            .setOriginConnectionInfo(originConnectionInfo
-                                    .toDistancedConnectionInfo()
-                                    .toGrpcConnectionInfo()
-                            )
-                            .build()
+                        .newBuilder()
+                        .setOriginConnectionInfo(originConnectionInfo
+                            .toDistancedConnectionInfo()
+                            .toGrpcConnectionInfo()
+                        )
+                        .build()
                     );
 
                     pair = pair(pingResponse.getStatus(), pingResponse);
                     break;
                 case STORE:
-                    if (isNull(data)) {
+                    if (isNull(data) || isNull(dataType)) {
                         throw new NullPointerException("Missing data to store!");
                     }
 
                     StoreResponse storeResponse = stub.store(StoreRequest
-                            .newBuilder()
-                            .setOriginConnectionInfo(originConnectionInfo
-                                    .toDistancedConnectionInfo()
-                                    .toGrpcConnectionInfo()
-                            ).setData(data)
-                            .build()
+                        .newBuilder()
+                        .setOriginConnectionInfo(originConnectionInfo
+                            .toDistancedConnectionInfo()
+                            .toGrpcConnectionInfo()
+                        ).setData(data)
+                        .setDataType(dataType)
+                        .build()
                     );
 
                     pair = pair(storeResponse.getStatus(), storeResponse);
@@ -141,16 +149,16 @@ public class RpcCall {
                     }
 
                     FindNodeResponse findNodeResponse = stub.findNode(FindNodeRequest
-                            .newBuilder()
-                            .setDestId(idToFind.toBinaryString())
-                            .setOriginConnectionInfo(originConnectionInfo
-                                    .toDistancedConnectionInfo()
-                                    .toGrpcConnectionInfo()
-                            )
-                            .build()
+                        .newBuilder()
+                        .setDestId(idToFind.toBinaryString())
+                        .setOriginConnectionInfo(originConnectionInfo
+                            .toDistancedConnectionInfo()
+                            .toGrpcConnectionInfo()
+                        )
+                        .build()
                     );
 
-                    pair = pair(null, findNodeResponse);
+                    pair = pair(ACCEPTED, findNodeResponse);
                     break;
                 case FIND_VALUE:
                     if (isNull(idToFind)) {
@@ -158,13 +166,13 @@ public class RpcCall {
                     }
 
                     FindValueResponse findValueResponse = stub.findValue(FindValueRequest
-                            .newBuilder()
-                            .setOriginConnectionInfo(originConnectionInfo
-                                    .toDistancedConnectionInfo()
-                                    .toGrpcConnectionInfo()
-                            )
-                            .setKey(idToFind.toBinaryString())
-                            .build()
+                        .newBuilder()
+                        .setOriginConnectionInfo(originConnectionInfo
+                            .toDistancedConnectionInfo()
+                            .toGrpcConnectionInfo()
+                        )
+                        .setKey(idToFind.toBinaryString())
+                        .build()
                     );
 
                     pair = pair(findValueResponse.getStatus(), findValueResponse);
@@ -175,21 +183,21 @@ public class RpcCall {
                     }
 
                     LeaveResponse leaveResponse = stub.leave(LeaveRequest
-                            .newBuilder()
-                            .setId(idToFind.toBinaryString())
-                            .build()
+                        .newBuilder()
+                        .setId(idToFind.toBinaryString())
+                        .build()
                     );
 
                     pair = pair(leaveResponse.getStatus(), leaveResponse);
                     break;
                 case GOSSIP:
-                    if (isNull(data)) {
+                    if (isNull(data) || isNull(dataType)) {
                         throw new NullPointerException("Missing data");
                     }
 
                     GossipResponse gossipResponse = stub.gossip(GossipRequest
-                            .newBuilder() //TODO: add stuff here
-                            .build()
+                        .newBuilder() //TODO: add stuff here
+                        .build()
                     );
 
                     pair = pair(gossipResponse.getStatus(), gossipResponse);
