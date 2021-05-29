@@ -6,13 +6,13 @@ import java.io.*;
 
 public class ClientItem implements Serializable {
     public Id topic;
-    public String bid; // TODO: type Bid?
+    public float bid;
     public String item;
     public Id clientId;
     public final long serialVersionUID = 1L;
 
 
-    ClientItem(Id clientId, Id topic, String bid, String item){
+    ClientItem(Id clientId, Id topic, float bid, String item){
         this.clientId = clientId;
         this.topic = topic;
         this.bid = bid;

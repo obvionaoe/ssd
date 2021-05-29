@@ -1,35 +1,44 @@
 package pt.up.fc.dcc.ssd.auction;
 
 import pt.up.fc.dcc.ssd.blockchain.BlockchainRepo;
+import pt.up.fc.dcc.ssd.common.Pair;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 
 import javax.net.ssl.SSLException;
+import java.util.Scanner;
 
+import static pt.up.fc.dcc.ssd.auction.Utils.isBidValid;
 import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
+
 public class ClientNode {
     public String role;
     public KademliaNode kademlia;
     public ClientItem item;
-    public BidsRepo bidsRepo;
-    public TopicsRepo topicsRepo;
+    public ItemsRepo itemsRepo;
     public BlockchainRepo blockchainRepo;
 
-    public ClientNode(String role, Id topic, String bid, String item ) throws SSLException {
-        bidsRepo = new BidsRepo();
-        topicsRepo = new TopicsRepo();
+    public ClientNode(String role) throws SSLException {
+        itemsRepo = new ItemsRepo();
         blockchainRepo = new BlockchainRepo();
-
-        bidsRepo.put(topic, toByteArray(new Bid(bid, topic)));
-        topicsRepo.put(topic, toByteArray(new Topic(topic, item)));
 
         kademlia = KademliaNode
             .newBuilder()
             .addBlockchainRepo(blockchainRepo)
-            .addBidsRepo(bidsRepo)
-            .addTopicRepo(topicsRepo)
+            .addItemsRepo(itemsRepo)
             .build();
         this.role = role;
-        this.item = new ClientItem(kademlia.getId(), topic , bid, item);
+
+    }
+
+    public void setItem(Id topic, String bid, String item ){
+        this.item = new ClientItem(kademlia.getId(), topic , Float.parseFloat(bid), item);
+        itemsRepo.put(topic, toByteArray(item));
+
+    }
+
+    // TODO: seller communication
+    public void bidTalk(){
+
     }
 }
