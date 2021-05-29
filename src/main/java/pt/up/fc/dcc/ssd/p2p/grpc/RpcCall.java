@@ -11,6 +11,7 @@ import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.grpc.KademliaGrpc.KademliaBlockingStub;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
+import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 
 import javax.net.ssl.SSLException;
 
@@ -26,24 +27,21 @@ import static pt.up.fc.dcc.ssd.p2p.security.Ssl.loadClientTlsCredentials;
  * Object that creates a request and calls an RPC
  */
 public class RpcCall {
+    private KademliaNode self;
     private KademliaBlockingStub stub;
-    private ConnectionInfo originConnectionInfo;
     private ConnectionInfo destinationConnectionInfo;
     private RpcType type;
     private Id idToFind;
+    private Float bid;
     private Data data;
     private DataType dataType;
 
-    private RpcCall() {
+    private RpcCall(KademliaNode self) {
+        this.self = self;
     }
 
-    public static RpcCall rpc() {
-        return new RpcCall();
-    }
-
-    public RpcCall withOriginConnInfo(ConnectionInfo originConnectionInfo) {
-        this.originConnectionInfo = originConnectionInfo;
-        return this;
+    public static RpcCall rpc(KademliaNode self) {
+        return new RpcCall(self);
     }
 
     public RpcCall withDestConnInfo(ConnectionInfo destinationConnectionInfo) {
@@ -63,6 +61,11 @@ public class RpcCall {
 
     public RpcCall withId(Id destinationId) {
         this.idToFind = destinationId;
+        return this;
+    }
+
+    public RpcCall withBid(float bid) {
+        this.bid = bid;
         return this;
     }
 
@@ -92,7 +95,7 @@ public class RpcCall {
             throw new NullPointerException("Missing destination connection information!");
         }
 
-        if (isNull(originConnectionInfo)) {
+        if (isNull(self.getConnectionInfo())) {
             throw new NullPointerException("Missing origin connection information!");
         }
 
@@ -117,7 +120,7 @@ public class RpcCall {
                 case PING:
                     PingResponse pingResponse = stub.ping(PingRequest
                         .newBuilder()
-                        .setOriginConnectionInfo(originConnectionInfo
+                        .setOriginConnectionInfo(self.getConnectionInfo()
                             .toDistancedConnectionInfo()
                             .toGrpcConnectionInfo()
                         )
@@ -133,7 +136,7 @@ public class RpcCall {
 
                     StoreResponse storeResponse = stub.store(StoreRequest
                         .newBuilder()
-                        .setOriginConnectionInfo(originConnectionInfo
+                        .setOriginConnectionInfo(self.getConnectionInfo()
                             .toDistancedConnectionInfo()
                             .toGrpcConnectionInfo()
                         ).setData(data)
@@ -151,7 +154,7 @@ public class RpcCall {
                     FindNodeResponse findNodeResponse = stub.findNode(FindNodeRequest
                         .newBuilder()
                         .setDestId(idToFind.toBinaryString())
-                        .setOriginConnectionInfo(originConnectionInfo
+                        .setOriginConnectionInfo(self.getConnectionInfo()
                             .toDistancedConnectionInfo()
                             .toGrpcConnectionInfo()
                         )
@@ -167,7 +170,7 @@ public class RpcCall {
 
                     FindValueResponse findValueResponse = stub.findValue(FindValueRequest
                         .newBuilder()
-                        .setOriginConnectionInfo(originConnectionInfo
+                        .setOriginConnectionInfo(self.getConnectionInfo()
                             .toDistancedConnectionInfo()
                             .toGrpcConnectionInfo()
                         )
@@ -176,6 +179,43 @@ public class RpcCall {
                     );
 
                     pair = pair(findValueResponse.getStatus(), findValueResponse);
+                    break;
+                case GOSSIP:
+                    if (isNull(data) || isNull(dataType)) {
+                        throw new NullPointerException("Missing data");
+                    }
+
+                    GossipResponse gossipResponse = stub.gossip(GossipRequest
+                        .newBuilder()
+                        .setOriginConnectionInfo(self.getConnectionInfo()
+                            .toDistancedConnectionInfo()
+                            .toGrpcConnectionInfo()
+                        )
+                        .addVisitedNodeIds(self.getId().toBinaryString())
+                        .setData(data)
+                        .build()
+                    );
+
+                    pair = pair(gossipResponse.getStatus(), gossipResponse);
+                    break;
+                case BID:
+                    if (isNull(idToFind) || isNull(bid)) {
+                        throw new NullPointerException("Missing node id!");
+                    }
+
+
+                    BidResponse bidResponse = stub.bid(BidRequest
+                        .newBuilder()
+                        .setOriginConnectionInfo(self.getConnectionInfo()
+                            .toDistancedConnectionInfo()
+                            .toGrpcConnectionInfo()
+                        )
+                        .setItemId(idToFind.toBinaryString())
+                        .setBid(bid)
+                        .build()
+                    );
+
+                    pair = pair(bidResponse.getStatus(), bidResponse);
                     break;
                 case LEAVE:
                     if (isNull(idToFind)) {
@@ -189,18 +229,6 @@ public class RpcCall {
                     );
 
                     pair = pair(leaveResponse.getStatus(), leaveResponse);
-                    break;
-                case GOSSIP:
-                    if (isNull(data) || isNull(dataType)) {
-                        throw new NullPointerException("Missing data");
-                    }
-
-                    GossipResponse gossipResponse = stub.gossip(GossipRequest
-                        .newBuilder() //TODO: add stuff here
-                        .build()
-                    );
-
-                    pair = pair(gossipResponse.getStatus(), gossipResponse);
                     break;
             }
         } catch (StatusRuntimeException | SSLException e) {

@@ -10,6 +10,14 @@ public class Validation {
         return true;
     }
 
+    public static boolean validateRequest(BidRequest request) {
+        return true;
+    }
+
+    public static boolean validateRequest(GossipRequest request) {
+        return true;
+    }
+
     public static boolean validateRequest(FindNodeRequest request) {
         return true;
     }

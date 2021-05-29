@@ -9,14 +9,17 @@ import pt.up.fc.dcc.ssd.blockchain.BlockchainRepo;
 import pt.up.fc.dcc.ssd.common.Repository;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
+import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 import pt.up.fc.dcc.ssd.p2p.routing.RoutingTable;
 import pt.up.fc.dcc.ssd.p2p.routing.exceptions.RoutingTableException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.grpc.Status.INTERNAL;
 import static io.grpc.Status.INVALID_ARGUMENT;
+import static pt.up.fc.dcc.ssd.common.Utils.isNotNull;
 import static pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo.fromGrpcConnectionInfo;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.*;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Validation.validateRequest;
@@ -26,12 +29,14 @@ import static pt.up.fc.dcc.ssd.p2p.node.Id.idFromBinaryString;
  * Kademlia RPC implementation
  */
 public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
+    private final KademliaNode self;
     private final RoutingTable routingTable;
     private final BlockchainRepo blockchain;
     private final TopicsRepo topicsRepo;
     private final BidsRepo bidsRepo;
 
-    public KademliaImpl(RoutingTable routingTable, BlockchainRepo blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo) {
+    public KademliaImpl(KademliaNode self, RoutingTable routingTable, BlockchainRepo blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo) {
+        this.self = self;
         this.routingTable = routingTable;
         this.blockchain = blockchain;
         this.topicsRepo = topicsRepo;
@@ -53,9 +58,9 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         }
 
         responseObserver.onNext(PingResponse
-                .newBuilder()
-                .setStatus(PONG)
-                .build()
+            .newBuilder()
+            .setStatus(PONG)
+            .build()
         );
         responseObserver.onCompleted();
     }
@@ -135,17 +140,16 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
 
         if (repo.containsKey(key)) {
             Data data = Data
-                    .newBuilder()
-                    .setKey(request.getKey())
-                    .setValue(ByteString.copyFrom(repo.get(key)))
-                    .build();
+                .newBuilder()
+                .setKey(request.getKey())
+                .setValue(ByteString.copyFrom(repo.get(key)))
+                .build();
 
             responseObserver.onNext(response
-                    .setStatus(FOUND)
-                    .setData(data)
-                    .build()
+                .setStatus(FOUND)
+                .setData(data)
+                .build()
             );
-            responseObserver.onCompleted();
         } else {
             List<DistancedConnectionInfo> infos;
             try {
@@ -155,16 +159,16 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
                 return;
             }
 
-            if (infos != null) {
+            if (isNotNull(infos)) {
                 response.addAllConnectionInfos(infos.stream().map(DistancedConnectionInfo::toGrpcConnectionInfo).collect(Collectors.toList()));
             }
 
             responseObserver.onNext(response
-                    .setStatus(NOT_FOUND)
-                    .build()
+                .setStatus(NOT_FOUND)
+                .build()
             );
-            responseObserver.onCompleted();
         }
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -173,8 +177,35 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
     }
 
     @Override
-    public void gossip(GossipRequest request, StreamObserver<GossipResponse> responseObserver) {
+    public void bid(BidRequest request, StreamObserver<BidResponse> responseObserver) {
         // TODO
+    }
+
+    @Override
+    public void gossip(GossipRequest request, StreamObserver<GossipResponse> responseObserver) {
+        if (!validateRequest(request)) {
+            responseObserver.onError(new StatusRuntimeException(INVALID_ARGUMENT));
+            return;
+        }
+
+        responseObserver.onNext(GossipResponse
+            .newBuilder()
+            .setStatus(ACCEPTED)
+            .build()
+        );
+        responseObserver.onCompleted();
+
+        Id key = idFromBinaryString(request.getData().getKey());
+        byte[] data = request.getData().getValue().toByteArray();
+
+
+        blockchain.put(key, data);
+
+        List<Id> visitedIds = new ArrayList<>();
+
+        request.getVisitedNodeIdsList().forEach(string -> visitedIds.add(idFromBinaryString(string)));
+
+        self.gossip(key, data, visitedIds);
     }
 
     private Repository getRepo(DataType dataType) {

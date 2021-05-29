@@ -56,7 +56,7 @@ public class KademliaNode {
         this.topicsRepo = topicsRepo;
         this.bidsRepo = bidsRepo;
         ServerBuilder<?> sb = NettyServerBuilder.forPort(port).sslContext(sslContext);
-        sb.addService(new KademliaImpl(routingTable, blockchain, topicsRepo, bidsRepo));
+        sb.addService(new KademliaImpl(this, routingTable, blockchain, topicsRepo, bidsRepo));
         server = sb.build();
         started = false;
         // TODO: Add timer for routing table management pings
@@ -70,7 +70,7 @@ public class KademliaNode {
         this.topicsRepo = topicsRepo;
         this.bidsRepo = bidsRepo;
         ServerBuilder<?> sb = NettyServerBuilder.forPort(0).sslContext(sslContext);
-        sb.addService(new KademliaImpl(routingTable, blockchain, topicsRepo, bidsRepo));
+        sb.addService(new KademliaImpl(this, routingTable, blockchain, topicsRepo, bidsRepo));
         server = sb.build();
         // TODO: Add timer for routing table management pings
     }
@@ -161,8 +161,7 @@ public class KademliaNode {
 
         routingTable.update(destinationId, destinationConnectionInfo);
 
-        Pair<Status, FindNodeResponse> pair = cast(rpc()
-                .withOriginConnInfo(connectionInfo)
+        Pair<Status, FindNodeResponse> pair = cast(rpc(this)
                 .withDestConnInfo(destinationConnectionInfo)
                 .type(FIND_NODE)
                 .withId(id)
@@ -220,8 +219,7 @@ public class KademliaNode {
             }
 
             try {
-                Pair<Status, PingResponse> pair = cast(rpc()
-                        .withOriginConnInfo(connectionInfo)
+                Pair<Status, PingResponse> pair = cast(rpc(this)
                         .withDestConnInfo(closestInfo)
                         .type(PING)
                         .call(),
@@ -288,8 +286,7 @@ public class KademliaNode {
             }
 
             for (DistancedConnectionInfo info : closestInfosList) {
-                Pair<Status, FindNodeResponse> pair = cast(rpc()
-                        .withOriginConnInfo(connectionInfo)
+                Pair<Status, FindNodeResponse> pair = cast(rpc(this)
                         .withDestConnInfo(info)
                         .type(FIND_NODE)
                         .withId(destinationId)
@@ -348,8 +345,7 @@ public class KademliaNode {
             for (int i = 0; i <= closestInfosList.size() - 1; i++) {
                 DistancedConnectionInfo info = closestInfosList.get(i);
 
-                Pair<Status, FindValueResponse> pair = cast(rpc()
-                        .withOriginConnInfo(connectionInfo)
+                Pair<Status, FindValueResponse> pair = cast(rpc(this)
                         .withDestConnInfo(info)
                         .type(FIND_VALUE)
                         .withId(key)
@@ -392,25 +388,25 @@ public class KademliaNode {
      * Calls the {@link pt.up.fc.dcc.ssd.p2p.grpc.KademliaImpl#store(StoreRequest, StreamObserver)} RPC
      * on the {@value Config#MAX_BUCKET_SIZE} closest nodes to the provided key ID
      *
-     * @param key   the ID of the data to be stored
-     * @param value the data in byte[]
+     * @param key  the ID of the data to be stored
+     * @param data the data in byte[]
      * @return true if at least one node successfully stored the <key, value> pair, false otherwise
      */
-    public boolean store(Id key, byte[] value, DataType dataType) {
+    public boolean store(Id key, byte[] data, DataType dataType) {
         try {
             List<DistancedConnectionInfo> closestInfoList = routingTable.findClosest(key);
 
             List<Pair<Status, StoreResponse>> responses = new ArrayList<>();
 
             closestInfoList.forEach(info ->
-                responses.add(cast(rpc()
-                        .withOriginConnInfo(connectionInfo)
-                        .withDestConnInfo(info).type(STORE)
-                        .withData(key, value)
-                        .withDataType(dataType)
-                        .call(),
-                    Status.class,
-                    StoreResponse.class
+                responses.add(
+                    cast(rpc(this)
+                            .withDestConnInfo(info).type(STORE)
+                            .withData(key, data)
+                            .withDataType(dataType)
+                            .call(),
+                        Status.class,
+                        StoreResponse.class
                     )
                 )
             );
@@ -422,15 +418,67 @@ public class KademliaNode {
         }
     }
 
-    // TODO: gossip
-    public boolean gossip(byte[] byteArray, DataType dataType) {
+    /**
+     * Given a seller Id and an item Id, bids on an item
+     *
+     * @param sellerId id of seller
+     * @param itemId   id of item to bid on
+     * @param bid      bid amount
+     * @return true if the seller accepts the bid, false otherwise
+     */
+    public boolean bid(Id sellerId, Id itemId, float bid) {
         try {
-            List<DistancedConnectionInfo> allConnectionInfos = routingTable.getAll();
+            if (!findNode(sellerId)) {
+                return false;
+            }
 
-            return false;
+            DistancedConnectionInfo sellerConnInfo = routingTable.findClosest(sellerId).get(0);
+
+            Pair<Status, BidResponse> responsePair = cast(rpc(this)
+                    .withDestConnInfo(sellerConnInfo)
+                    .type(BID)
+                    .withId(itemId)
+                    .withBid(bid)
+                    .call(),
+                Status.class,
+                BidResponse.class
+            );
+
+            return responsePair.first().equals(ACCEPTED);
         } catch (RoutingTableException e) {
             logger.warning(e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Passes the given data to all the nodes on the network
+     *
+     * @param dataId the id of the data to gossip
+     * @param data   the data to gossip
+     */
+    public void gossip(Id dataId, byte[] data, List<Id> visitedNodeIds) {
+        try {
+            List<DistancedConnectionInfo> allConnectionInfos = routingTable.getAll();
+
+            visitedNodeIds.forEach(visitedId ->
+                allConnectionInfos.removeIf(info ->
+                    info.getId().equals(visitedId)
+                )
+            );
+
+            allConnectionInfos.forEach(destinationInfo -> cast(rpc(this)
+                    .withDestConnInfo(destinationInfo)
+                    .type(GOSSIP)
+                    .withData(dataId, data)
+                    .call(),
+                Status.class,
+                GossipResponse.class
+                )
+            );
+
+        } catch (RoutingTableException e) {
+            logger.warning(e.getMessage());
         }
     }
 

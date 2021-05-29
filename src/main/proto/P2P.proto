@@ -10,13 +10,17 @@ service Kademlia {
 
   rpc store (StoreRequest) returns (StoreResponse) {}
 
+  rpc gossip (GossipRequest) returns (GossipResponse) {}
+
+  rpc bid (BidRequest) returns (BidResponse) {}
+
   rpc findNode (FindNodeRequest) returns (FindNodeResponse) {}
 
   rpc findValue (FindValueRequest) returns (FindValueResponse) {}
 
   rpc leave (LeaveRequest) returns (LeaveResponse) {}
 
-  rpc gossip (GossipRequest) returns (GossipResponse) {}
+
 }
 
 // Requests
@@ -56,6 +60,12 @@ message GossipRequest {
   DataType dataType = 4;
 }
 
+message BidRequest {
+  GrpcConnectionInfo originConnectionInfo = 1;
+  string itemId = 2;
+  float bid = 3;
+}
+
 // Responses
 message BootstrapResponse {
   Status status = 1;
@@ -67,6 +77,14 @@ message PingResponse {
 }
 
 message StoreResponse {
+  Status status = 1;
+}
+
+message GossipResponse {
+  Status status = 1;
+}
+
+message BidResponse {
   Status status = 1;
 }
 
@@ -84,10 +102,6 @@ message LeaveResponse {
   Status status = 1;
 }
 
-message GossipResponse {
-  Status status = 1;
-}
-
 // Other Messages
 
 message GrpcConnectionInfo {
@@ -102,6 +116,7 @@ message Data {
   bytes value = 2;
 }
 
+// TODO: maybe not needed
 enum DataType {
   BLOCK = 0;
   TOPIC = 1;
