@@ -8,19 +8,19 @@ public class Miner {
 
     private static final Logger logger = Logger.getLogger(Client.class.getName());
 
-    private static void makeGenesis(){
+    private static void makeGenesis() {
 
     }
 
     public static void main(String[] args) throws Exception {
 
-        if(args.length > 0){
-            if(args[0] == "GENESIS"){
+        if (args.length > 0) {
+            if (args[0] == "GENESIS") {
                 makeGenesis();
             }
         }
 
-        while(true){
+        while (true) {
             System.out.println("Waiting for transactions to occur... ");
         }
     }

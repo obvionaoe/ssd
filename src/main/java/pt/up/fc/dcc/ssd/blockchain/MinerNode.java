@@ -12,8 +12,8 @@ public class MinerNode {
 
         // TODO: Add blockchain
         kademlia = KademliaNode
-                .newBuilder()
-                .build();
+            .newBuilder()
+            .build();
     }
 
 }

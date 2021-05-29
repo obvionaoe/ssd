@@ -13,7 +13,7 @@ public class TransactionOutput {
         this.recipient = recipient;
         this.value = value;
         this.parentTransactionId = parentTransactionId;
-        this.id = Utils.applySecureHash(Utils.getStringFromKey(recipient)+Float.toString(value)+parentTransactionId);
+        this.id = Utils.applySecureHash(Utils.getStringFromKey(recipient) + Float.toString(value) + parentTransactionId);
     }
 
     //Check coin

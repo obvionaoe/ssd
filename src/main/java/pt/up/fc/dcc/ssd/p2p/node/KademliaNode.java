@@ -336,7 +336,7 @@ public class KademliaNode {
      * @param key and ID representing data stored in the network
      * @return a byte[] with the stored info if found, null otherwise
      */
-    public byte[] findValue(Id key) {
+    public byte[] findValue(Id key, DataType dataType) {
         try {
             List<DistancedConnectionInfo> closestInfosList = routingTable.findClosest(key);
 
@@ -353,6 +353,7 @@ public class KademliaNode {
                         .withDestConnInfo(info)
                         .type(FIND_VALUE)
                         .withId(key)
+                        .withDataType(dataType)
                         .call(),
                     Status.class,
                     FindValueResponse.class
@@ -422,8 +423,15 @@ public class KademliaNode {
     }
 
     // TODO: gossip
-    public boolean gossip(byte[] byteArray) {
-        return false;
+    public boolean gossip(byte[] byteArray, DataType dataType) {
+        try {
+            List<DistancedConnectionInfo> allConnectionInfos = routingTable.getAll();
+
+            return false;
+        } catch (RoutingTableException e) {
+            logger.warning(e.getMessage());
+            return false;
+        }
     }
 
     /**

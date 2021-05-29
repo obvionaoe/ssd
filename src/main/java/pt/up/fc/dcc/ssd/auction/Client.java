@@ -54,7 +54,7 @@ public class Client {
 
         } else if (operation == "BUY") {
             ClientItem sellerID = (ClientItem) toObject(
-                    clientNode.kademlia.findValue(topic)
+                    clientNode.kademlia.findValue(topic, DataType.TOPIC)
             );
         }
         else

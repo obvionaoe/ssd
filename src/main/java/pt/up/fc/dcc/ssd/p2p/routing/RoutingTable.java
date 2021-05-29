@@ -58,7 +58,6 @@ public class RoutingTable {
         return KBucket.distance(x, y);
     }
 
-
     private int findBucket(Id destinationId) throws RoutingTableException {
         BigInteger distance;
 
@@ -123,6 +122,12 @@ public class RoutingTable {
         }
 
         return connectionInfos;
+    }
+
+    public List<DistancedConnectionInfo> getAll() throws RoutingTableException {
+        List<DistancedConnectionInfo> resultList = new ArrayList<>();
+        buckets.forEach(kBucket -> resultList.addAll(kBucket.getAll()));
+        return resultList;
     }
 
     @Override

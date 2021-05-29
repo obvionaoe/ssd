@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static pt.up.fc.dcc.ssd.common.Utils.isNull;
 import static pt.up.fc.dcc.ssd.p2p.Config.MAX_BUCKET_SIZE;
 import static pt.up.fc.dcc.ssd.p2p.Config.MAX_DISTANCE;
 
@@ -65,6 +66,9 @@ public class KBucket {
 
     private static DistancedConnectionInfo distancedConnectionInfo(ConnectionInfo connectionInfo, Id destId) {
         try {
+            if (isNull(destId))
+                return new DistancedConnectionInfo(connectionInfo, BigInteger.ZERO);
+
             return new DistancedConnectionInfo(connectionInfo, distance(connectionInfo.getId(), destId));
         } catch (InvalidDistanceException e) {
             return null;
@@ -79,6 +83,16 @@ public class KBucket {
             if (distancedConnectionInfo == null) continue;
 
             connectionInfos.add(distancedConnectionInfo);
+        }
+
+        return connectionInfos;
+    }
+
+    protected List<DistancedConnectionInfo> getAll() {
+        List<DistancedConnectionInfo> connectionInfos = new ArrayList<>();
+
+        for (Id id : nodeIds) {
+            connectionInfos.add(distancedConnectionInfo(nodeMap.get(id), null));
         }
 
         return connectionInfos;

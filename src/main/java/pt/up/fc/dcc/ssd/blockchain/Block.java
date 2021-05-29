@@ -1,9 +1,5 @@
 package pt.up.fc.dcc.ssd.blockchain;
 
-import java.util.Date;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,26 +15,26 @@ public class Block {
     private int nonce;
 
     //Construtor do Bloco
-    public Block(int index, long timestamp , String previousHash,String data) {
+    public Block(int index, long timestamp, String previousHash, String data) {
 
         this.index = index;
         this.timeStamp = timestamp; //new Date().getTime();
         this.previousHash = previousHash;
-       // this.data=data;
-        this.nonce=0;
+        // this.data=data;
+        this.nonce = 0;
         this.merkleRoot = merkleRoot;
-        this.hash=calculateHash(this);
+        this.hash = calculateHash(this);
     }
 
-    public int getIndex(){
+    public int getIndex() {
         return index;
     }
 
-    public long getTimeStamp(){
+    public long getTimeStamp() {
         return timeStamp;
     }
 
-    public String getPreviousHash(){
+    public String getPreviousHash() {
         return previousHash;
     }
 
@@ -53,7 +49,7 @@ public class Block {
         return merkleRoot;
     }
 
-    public void setMerkleRoot(String merkleRoot){
+    public void setMerkleRoot(String merkleRoot) {
         this.merkleRoot = merkleRoot;
     }
 
@@ -72,9 +68,9 @@ public class Block {
 
     public String calculateHash(Block block) {
         return Utils.applySecureHash(previousHash
-                + Long.toString(timeStamp)
-                + Integer.toString(nonce)
-                + merkleRoot);
+            + Long.toString(timeStamp)
+            + Integer.toString(nonce)
+            + merkleRoot);
     }
 
     public String mineBlock(int difficulty) {
@@ -82,7 +78,7 @@ public class Block {
 
         merkleRoot = Utils.getMerkleRoot(transactions);
 
-        while (!getHash().substring(nonce,  difficulty).equals(Utils.zeros(difficulty))) {
+        while (!getHash().substring(nonce, difficulty).equals(Utils.zeros(difficulty))) {
             nonce++;
             hash = calculateHash(this);
         }
@@ -90,11 +86,11 @@ public class Block {
     }
 
     public boolean addTransaction(Transaction transaction) {
-        if(transaction == null){
+        if (transaction == null) {
             return false;
         }
-        if((!"0".equals(previousHash))) {
-            if((transaction.processTransaction() != true)) {
+        if ((!"0".equals(previousHash))) {
+            if ((transaction.processTransaction() != true)) {
                 System.out.println("Transaction failed to process. Discarded.");
                 return false;
             }
