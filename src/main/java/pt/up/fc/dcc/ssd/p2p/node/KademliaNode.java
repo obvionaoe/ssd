@@ -7,8 +7,7 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.stub.StreamObserver;
-import pt.up.fc.dcc.ssd.auction.BidsRepo;
-import pt.up.fc.dcc.ssd.auction.TopicsRepo;
+import pt.up.fc.dcc.ssd.auction.ItemsRepo;
 import pt.up.fc.dcc.ssd.blockchain.BlockchainRepo;
 import pt.up.fc.dcc.ssd.common.Pair;
 import pt.up.fc.dcc.ssd.p2p.Config;
@@ -44,33 +43,33 @@ public class KademliaNode {
     private final Server server;
     public final RoutingTable routingTable;
     private final BlockchainRepo blockchain;
-    private final TopicsRepo topicsRepo;
+    private final ItemsRepo itemsRepo;
     private final BidsRepo bidsRepo;
     private boolean started;
 
-    protected KademliaNode(Id id, String address, int port, BlockchainRepo blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo, SslContext sslContext) {
+    protected KademliaNode(Id id, String address, int port, BlockchainRepo blockchain, ItemsRepo itemsRepo, BidsRepo bidsRepo, SslContext sslContext) {
         this.id = id;
         this.address = address;
         routingTable = new RoutingTable(id);
         this.blockchain = blockchain;
-        this.topicsRepo = topicsRepo;
+        this.itemsRepo = itemsRepo;
         this.bidsRepo = bidsRepo;
         ServerBuilder<?> sb = NettyServerBuilder.forPort(port).sslContext(sslContext);
-        sb.addService(new KademliaImpl(routingTable, blockchain, topicsRepo, bidsRepo));
+        sb.addService(new KademliaImpl(routingTable, blockchain, itemsRepo, bidsRepo));
         server = sb.build();
         started = false;
         // TODO: Add timer for routing table management pings
     }
 
-    protected KademliaNode(Id id, String address, BlockchainRepo blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo, SslContext sslContext) {
+    protected KademliaNode(Id id, String address, BlockchainRepo blockchain, ItemsRepo itemsRepo, BidsRepo bidsRepo, SslContext sslContext) {
         this.id = id;
         this.address = address;
         routingTable = new RoutingTable(id);
         this.blockchain = blockchain;
-        this.topicsRepo = topicsRepo;
+        this.itemsRepo = itemsRepo;
         this.bidsRepo = bidsRepo;
         ServerBuilder<?> sb = NettyServerBuilder.forPort(0).sslContext(sslContext);
-        sb.addService(new KademliaImpl(routingTable, blockchain, topicsRepo, bidsRepo));
+        sb.addService(new KademliaImpl(routingTable, blockchain, itemsRepo, bidsRepo));
         server = sb.build();
         // TODO: Add timer for routing table management pings
     }
@@ -443,7 +442,7 @@ public class KademliaNode {
         private String address = "localhost";
         private NodeType type = NODE;
         private BlockchainRepo blockchain;
-        private TopicsRepo topicsRepo;
+        private ItemsRepo itemsRepo;
         private BidsRepo bidsRepo;
 
         private Builder() {
@@ -487,8 +486,8 @@ public class KademliaNode {
             return this;
         }
 
-        public Builder addTopicRepo(TopicsRepo topicsRepo) {
-            this.topicsRepo = topicsRepo;
+        public Builder addTopicRepo(ItemsRepo itemsRepo) {
+            this.itemsRepo = itemsRepo;
             return this;
         }
 
@@ -517,11 +516,11 @@ public class KademliaNode {
             SslContext sslContext = loadServerTlsCredentials();
             switch (type) {
                 case BOOTSTRAP_NODE:
-                    return new KademliaNode(BOOTSTRAP_NODE_ID, BOOTSTRAP_NODE_ADDR, BOOTSTRAP_NODE_PORT, blockchain, topicsRepo, bidsRepo, sslContext);
+                    return new KademliaNode(BOOTSTRAP_NODE_ID, BOOTSTRAP_NODE_ADDR, BOOTSTRAP_NODE_PORT, blockchain, itemsRepo, bidsRepo, sslContext);
                 case NODE:
                 default:
-                    return isNull(port) ? new KademliaNode(id, address, blockchain, topicsRepo, bidsRepo, sslContext)
-                        : new KademliaNode(id, address, port, blockchain, topicsRepo, bidsRepo, sslContext);
+                    return isNull(port) ? new KademliaNode(id, address, blockchain, itemsRepo, bidsRepo, sslContext)
+                        : new KademliaNode(id, address, port, blockchain, itemsRepo, bidsRepo, sslContext);
             }
         }
     }

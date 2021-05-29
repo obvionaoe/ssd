@@ -14,64 +14,71 @@ import static pt.up.fc.dcc.ssd.common.Serializable.toObject;
 public class Client {
     private static final Logger logger = Logger.getLogger(Client.class.getName());
     private static ClientNode clientNode;
-    private static Pair<Boolean, String> isBidValid(String bid, Id topic){
-        String currentBid = (String) toObject(clientNode.bidsRepo.get(topic));
-
-        return Pair.pair((Float.parseFloat(bid) > Float.parseFloat(currentBid)), currentBid);
-    }
 
     public static void main(String[] args) throws Exception {
 
-        if (args.length >= 1) {
-            System.err.println("ERROR: Please provide a topic");
-            return;
+
+        // Show available topics
+        System.out.println("Buyer or Seller?");
+        Scanner scan = new Scanner(System.in);
+        String operation = scan.nextLine();
+
+        if(!operation.equals("Buyer") && !operation.equals("Seller")){
+            throw new Exception("Role " + operation + " not found! You can only be Buyer or Seller!");
         }
 
-        // Buy or sell
-        String operation = args[0];
-
-        Id topic = Id.idFromData(args[1].getBytes(StandardCharsets.UTF_8));
-
-        String item = args[2];
-
-        String bid = args[3];
-
-        Pair<Boolean, String> isValid = isBidValid(bid, topic);
-
-        if(!isValid.first()) {
-            System.out.println("Sorry, current bid is higher: " + isValid.second());
-            System.exit(0);
-        }
-
-        clientNode = new ClientNode(operation, topic, bid, item);
+        clientNode = new ClientNode(operation);
 
         clientNode.kademlia.start();
 
-        if (operation == "SELL") {
+        if (operation.equals("Seller")) {
+            System.out.println("In what topic are you selling?");
+            scan = new Scanner(System.in);
+            String topic = scan.nextLine();
+
+            System.out.println("What item are you selling?");
+            scan = new Scanner(System.in);
+            String item = scan.nextLine();
+
+            System.out.println("What's the minimum price'?");
+            scan = new Scanner(System.in);
+            String bid = scan.nextLine();
+
+            clientNode.setItem(
+                    Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
+                    bid,
+                    item);
+
             clientNode.kademlia.store(
-                    topic, toByteArray(clientNode.item), DataType.TOPIC
+                    Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
+                    toByteArray(item), DataType.TOPIC
             );
 
-        } else if (operation == "BUY") {
-            ClientItem sellerID = (ClientItem) toObject(
-                    clientNode.kademlia.findValue(topic, DataType.TOPIC)
-            );
+        } else {
+            System.out.println("From what topic you want to buy?");
+            scan = new Scanner(System.in);
+            String topic = scan.nextLine();
+
+            clientNode.kademlia.findValue(
+                    Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
+                    DataType.TOPIC);
+
+            // TODO: Display items from topic
+
+            System.out.println("What item you want to buy?");
+            scan = new Scanner(System.in);
+            String item = scan.nextLine();
+
+            System.out.println("What's your bid'?");
+            scan = new Scanner(System.in);
+            String bid = scan.nextLine();
+
+            clientNode.setItem(
+                    Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
+                    bid,
+                    item);
+
+            //
         }
-        else
-            throw new Exception("Role not found!");
-
-        while(true){
-            // Biding...
-            System.out.println("Let the biding begin!");
-
-            Scanner scan = new Scanner(System.in);
-            String newBid = scan.nextLine();
-            isValid = isBidValid(newBid, topic);
-            if(!(boolean)isValid.first()){
-                System.out.println("Sorry, current bid is higher: " + isValid.second());
-            }
-
-        }
-
     }
 }

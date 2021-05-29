@@ -3,8 +3,7 @@ package pt.up.fc.dcc.ssd.p2p.grpc;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
-import pt.up.fc.dcc.ssd.auction.BidsRepo;
-import pt.up.fc.dcc.ssd.auction.TopicsRepo;
+import pt.up.fc.dcc.ssd.auction.ItemsRepo;
 import pt.up.fc.dcc.ssd.blockchain.BlockchainRepo;
 import pt.up.fc.dcc.ssd.common.Repository;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
@@ -28,13 +27,13 @@ import static pt.up.fc.dcc.ssd.p2p.node.Id.idFromBinaryString;
 public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
     private final RoutingTable routingTable;
     private final BlockchainRepo blockchain;
-    private final TopicsRepo topicsRepo;
+    private final ItemsRepo itemsRepo;
     private final BidsRepo bidsRepo;
 
-    public KademliaImpl(RoutingTable routingTable, BlockchainRepo blockchain, TopicsRepo topicsRepo, BidsRepo bidsRepo) {
+    public KademliaImpl(RoutingTable routingTable, BlockchainRepo blockchain, ItemsRepo itemsRepo, BidsRepo bidsRepo) {
         this.routingTable = routingTable;
         this.blockchain = blockchain;
-        this.topicsRepo = topicsRepo;
+        this.itemsRepo = itemsRepo;
         this.bidsRepo = bidsRepo;
     }
 
@@ -178,6 +177,6 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
     }
 
     private Repository getRepo(DataType dataType) {
-        return dataType.equals(DataType.BID) ? bidsRepo : dataType.equals(DataType.TOPIC) ? topicsRepo : blockchain;
+        return dataType.equals(DataType.BID) ? bidsRepo : dataType.equals(DataType.TOPIC) ? itemsRepo : blockchain;
     }
 }
