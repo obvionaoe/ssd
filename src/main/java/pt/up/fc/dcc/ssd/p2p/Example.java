@@ -1,6 +1,5 @@
 package pt.up.fc.dcc.ssd.p2p;
 
-import pt.up.fc.dcc.ssd.p2p.grpc.DataType;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 import pt.up.fc.dcc.ssd.p2p.node.NodeType;
@@ -98,10 +97,10 @@ public class Example {
         byte[] data = "345".getBytes(StandardCharsets.UTF_8);
         Id key = idFromData(data);
 
-        System.out.println("node1: store(\"345\") true == " + node1.store(key, data, DataType.TOPIC));
-        System.out.println("node1: findValue(idFromData(\"345\")) = " + new String(node1.findValue(key, DataType.TOPIC)));
-        System.out.println("node3: findValue(idFromData(\"345\")) = " + new String(node3.findValue(key, DataType.TOPIC)));
-        System.out.println("bootstrapNode: findValue(idFromData(\"345\")) = " + new String(bootstrapNode.findValue(key, DataType.TOPIC)));
+        System.out.println("node1: store(\"345\") true == " + node1.store(key, data));
+        System.out.println("node1: findValue(idFromData(\"345\")) = " + new String(node1.findValue(key)));
+        System.out.println("node3: findValue(idFromData(\"345\")) = " + new String(node3.findValue(key)));
+        System.out.println("bootstrapNode: findValue(idFromData(\"345\")) = " + new String(bootstrapNode.findValue(key)));
 
         bootstrapNode.stop();
         node1.stop();

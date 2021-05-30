@@ -1,7 +1,5 @@
 package pt.up.fc.dcc.ssd.auction;
 
-import pt.up.fc.dcc.ssd.common.Pair;
-import pt.up.fc.dcc.ssd.p2p.grpc.DataType;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
 import java.nio.charset.StandardCharsets;
@@ -9,7 +7,6 @@ import java.util.Scanner;
 import java.util.logging.Logger;
 
 import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
-import static pt.up.fc.dcc.ssd.common.Serializable.toObject;
 
 public class Client {
     private static final Logger logger = Logger.getLogger(Client.class.getName());
@@ -23,7 +20,7 @@ public class Client {
         Scanner scan = new Scanner(System.in);
         String operation = scan.nextLine();
 
-        if(!operation.equals("Buyer") && !operation.equals("Seller")){
+        if (!operation.equals("Buyer") && !operation.equals("Seller")) {
             throw new Exception("Role " + operation + " not found! You can only be Buyer or Seller!");
         }
 
@@ -45,23 +42,23 @@ public class Client {
             String bid = scan.nextLine();
 
             clientNode.setItem(
-                    Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
-                    bid,
-                    item);
+                Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
+                bid,
+                item);
 
             clientNode.kademlia.store(
-                    Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
-                    toByteArray(item), DataType.TOPIC
+                Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
+                toByteArray(item)
             );
 
         } else {
-            System.out.println("From what topic you want to buy?");
+            System.out.println("From what topic do you want to buy?");
             scan = new Scanner(System.in);
             String topic = scan.nextLine();
 
             clientNode.kademlia.findValue(
-                    Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
-                    DataType.TOPIC);
+                Id.idFromData(topic.getBytes(StandardCharsets.UTF_8))
+            );
 
             // TODO: Display items from topic
 
@@ -74,9 +71,9 @@ public class Client {
             String bid = scan.nextLine();
 
             clientNode.setItem(
-                    Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
-                    bid,
-                    item);
+                Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
+                bid,
+                item);
 
             //
         }

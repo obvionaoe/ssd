@@ -14,6 +14,9 @@ import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 
 import javax.net.ssl.SSLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static pt.up.fc.dcc.ssd.common.Pair.pair;
 import static pt.up.fc.dcc.ssd.common.Utils.isNull;
@@ -35,6 +38,7 @@ public class RpcCall {
     private Float bid;
     private Data data;
     private DataType dataType;
+    private List<Id> visitedIds;
 
     private RpcCall(KademliaNode self) {
         this.self = self;
@@ -81,6 +85,11 @@ public class RpcCall {
 
     public RpcCall withDataType(DataType dataType) {
         this.dataType = dataType;
+        return this;
+    }
+
+    public RpcCall withVisitedIds(List<Id> visitedIds) {
+        this.visitedIds = visitedIds;
         return this;
     }
 
@@ -185,13 +194,22 @@ public class RpcCall {
                         throw new NullPointerException("Missing data");
                     }
 
+                    List<String> visitedList;
+
+                    if (isNull(visitedIds)) {
+                        visitedList = new ArrayList<>();
+                        visitedList.add(self.getId().toBinaryString());
+                    } else {
+                        visitedList = visitedIds.stream().map(Id::toBinaryString).collect(Collectors.toList());
+                    }
+
                     GossipResponse gossipResponse = stub.gossip(GossipRequest
                         .newBuilder()
                         .setOriginConnectionInfo(self.getConnectionInfo()
                             .toDistancedConnectionInfo()
                             .toGrpcConnectionInfo()
                         )
-                        .addVisitedNodeIds(self.getId().toBinaryString())
+                        .addAllVisitedNodeIds(visitedList)
                         .setData(data)
                         .build()
                     );
@@ -202,7 +220,6 @@ public class RpcCall {
                     if (isNull(idToFind) || isNull(bid)) {
                         throw new NullPointerException("Missing node id!");
                     }
-
 
                     BidResponse bidResponse = stub.bid(BidRequest
                         .newBuilder()

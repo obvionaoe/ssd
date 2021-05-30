@@ -1,14 +1,11 @@
 package pt.up.fc.dcc.ssd.auction;
 
 import pt.up.fc.dcc.ssd.blockchain.BlockchainRepo;
-import pt.up.fc.dcc.ssd.common.Pair;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 
 import javax.net.ssl.SSLException;
-import java.util.Scanner;
 
-import static pt.up.fc.dcc.ssd.auction.Utils.isBidValid;
 import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 
 public class ClientNode {
@@ -19,13 +16,9 @@ public class ClientNode {
     public BlockchainRepo blockchainRepo;
 
     public ClientNode(String role) throws SSLException {
-        itemsRepo = new ItemsRepo();
-        blockchainRepo = new BlockchainRepo();
 
         kademlia = KademliaNode
             .newBuilder()
-            .addBlockchainRepo(blockchainRepo)
-            .addItemsRepo(itemsRepo)
             .build();
         this.role = role;
 

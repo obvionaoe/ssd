@@ -3,13 +3,10 @@ package pt.up.fc.dcc.ssd.p2p.grpc;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
-import pt.up.fc.dcc.ssd.auction.ItemsRepo;
-import pt.up.fc.dcc.ssd.blockchain.BlockchainRepo;
 import pt.up.fc.dcc.ssd.common.Repository;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
-import pt.up.fc.dcc.ssd.p2p.routing.RoutingTable;
 import pt.up.fc.dcc.ssd.p2p.routing.exceptions.RoutingTableException;
 
 import java.util.ArrayList;
@@ -29,17 +26,9 @@ import static pt.up.fc.dcc.ssd.p2p.node.Id.idFromBinaryString;
  */
 public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
     private final KademliaNode self;
-    private final RoutingTable routingTable;
-    private final BlockchainRepo blockchain;
-    private final ItemsRepo itemsRepo;
-    private final BidsRepo bidsRepo;
 
-    public KademliaImpl(KademliaNode self, RoutingTable routingTable, BlockchainRepo blockchain, ItemsRepo itemsRepo, BidsRepo bidsRepo) {
+    public KademliaImpl(KademliaNode self) {
         this.self = self;
-        this.routingTable = routingTable;
-        this.blockchain = blockchain;
-        this.itemsRepo = itemsRepo;
-        this.bidsRepo = bidsRepo;
     }
 
     @Override
@@ -51,7 +40,7 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
 
         DistancedConnectionInfo originConnectionInfo = fromGrpcConnectionInfo(request.getOriginConnectionInfo());
 
-        if (!routingTable.update(originConnectionInfo)) {
+        if (!self.getRoutingTable().update(originConnectionInfo)) {
             responseObserver.onError(new StatusRuntimeException(INTERNAL));
             return;
         }
@@ -71,7 +60,7 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
             return;
         }
 
-        if (!routingTable.update(fromGrpcConnectionInfo(request.getOriginConnectionInfo()))) {
+        if (!self.getRoutingTable().update(fromGrpcConnectionInfo(request.getOriginConnectionInfo()))) {
             responseObserver.onError(new StatusRuntimeException(INTERNAL));
             return;
         }
@@ -104,7 +93,7 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
 
         List<DistancedConnectionInfo> infos;
         try {
-            infos = routingTable.findClosest(idFromBinaryString(request.getDestId()));
+            infos = self.getRoutingTable().findClosest(idFromBinaryString(request.getDestId()));
         } catch (RoutingTableException e) {
             responseObserver.onError(new StatusRuntimeException(INTERNAL.withDescription(e.getMessage())));
             return;
@@ -112,7 +101,7 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
 
         DistancedConnectionInfo originConnectionInfo = fromGrpcConnectionInfo(request.getOriginConnectionInfo());
 
-        routingTable.update(originConnectionInfo);
+        self.getRoutingTable().update(originConnectionInfo);
 
         FindNodeResponse.Builder response = FindNodeResponse.newBuilder();
 
@@ -152,7 +141,7 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         } else {
             List<DistancedConnectionInfo> infos;
             try {
-                infos = routingTable.findClosest(key);
+                infos = self.getRoutingTable().findClosest(key);
             } catch (RoutingTableException e) {
                 responseObserver.onError(new StatusRuntimeException(INTERNAL.withDescription(e.getMessage())));
                 return;
@@ -177,7 +166,21 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
 
     @Override
     public void bid(BidRequest request, StreamObserver<BidResponse> responseObserver) {
-        // TODO
+        if (!validateRequest(request)) {
+            responseObserver.onError(new StatusRuntimeException(INVALID_ARGUMENT));
+            return;
+        }
+
+        BidResponse.Builder response = BidResponse.newBuilder();
+
+        if (self.getItemsRepo().bid(idFromBinaryString(request.getItemId()), request.getBid())) {
+            response.setStatus(ACCEPTED);
+        } else {
+            response.setStatus(FAILED);
+        }
+
+        responseObserver.onNext(response.build());
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -198,7 +201,7 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         byte[] data = request.getData().getValue().toByteArray();
 
 
-        blockchain.put(key, data);
+        self.getBlockchain().put(key, data);
 
         List<Id> visitedIds = new ArrayList<>();
 
@@ -208,6 +211,6 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
     }
 
     private Repository getRepo(DataType dataType) {
-        return dataType.equals(DataType.BID) ? bidsRepo : dataType.equals(DataType.TOPIC) ? itemsRepo : blockchain;
+        return dataType.equals(DataType.TOPIC) ? self.getItemsRepo() : self.getBlockchain();
     }
 }

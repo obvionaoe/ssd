@@ -7,16 +7,24 @@ public class ItemsRepo implements Repository{
 
     @Override
     public boolean containsKey(Id key) {
+        // TODO: Ana
         return false;
     }
 
     @Override
     public byte[] get(Id key) {
+        // TODO: Ana
         return new byte[0];
     }
 
     @Override
     public boolean put(Id key, byte[] byteArray) {
+        // TODO: Ana
         return false;
+    }
+
+    public boolean bid(Id itemId, float bid) {
+        // TODO: Ana
+        return true;
     }
 }

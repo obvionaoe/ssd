@@ -44,32 +44,29 @@ public class KademliaNode {
     public final RoutingTable routingTable;
     private final BlockchainRepo blockchain;
     private final ItemsRepo itemsRepo;
-    private final BidsRepo bidsRepo;
     private boolean started;
 
-    protected KademliaNode(Id id, String address, int port, BlockchainRepo blockchain, ItemsRepo itemsRepo, BidsRepo bidsRepo, SslContext sslContext) {
+    protected KademliaNode(Id id, String address, int port, SslContext sslContext) {
         this.id = id;
         this.address = address;
         routingTable = new RoutingTable(id);
-        this.blockchain = blockchain;
-        this.itemsRepo = itemsRepo;
-        this.bidsRepo = bidsRepo;
+        this.blockchain = new BlockchainRepo();
+        this.itemsRepo = new ItemsRepo();
         ServerBuilder<?> sb = NettyServerBuilder.forPort(port).sslContext(sslContext);
-        sb.addService(new KademliaImpl(this, routingTable, blockchain, itemsRepo, bidsRepo));
+        sb.addService(new KademliaImpl(this));
         server = sb.build();
         started = false;
         // TODO: Add timer for routing table management pings
     }
 
-    protected KademliaNode(Id id, String address, BlockchainRepo blockchain, ItemsRepo itemsRepo, BidsRepo bidsRepo, SslContext sslContext) {
+    protected KademliaNode(Id id, String address, SslContext sslContext) {
         this.id = id;
         this.address = address;
         routingTable = new RoutingTable(id);
-        this.blockchain = blockchain;
-        this.itemsRepo = itemsRepo;
-        this.bidsRepo = bidsRepo;
+        this.blockchain = new BlockchainRepo();
+        this.itemsRepo = new ItemsRepo();
         ServerBuilder<?> sb = NettyServerBuilder.forPort(0).sslContext(sslContext);
-        sb.addService(new KademliaImpl(this, routingTable, blockchain, itemsRepo, bidsRepo));
+        sb.addService(new KademliaImpl(this));
         server = sb.build();
         // TODO: Add timer for routing table management pings
     }
@@ -135,6 +132,18 @@ public class KademliaNode {
         return connectionInfo.getPort();
     }
 
+    public RoutingTable getRoutingTable() {
+        return routingTable;
+    }
+
+    public BlockchainRepo getBlockchain() {
+        return blockchain;
+    }
+
+    public ItemsRepo getItemsRepo() {
+        return itemsRepo;
+    }
+
     /**
      * Bootstraps this node using the standard address and port for the bootstrap node, which should already be running
      *
@@ -160,8 +169,7 @@ public class KademliaNode {
 
         routingTable.update(destinationId, destinationConnectionInfo);
 
-        Pair<Status, FindNodeResponse> pair = cast(rpc()
-                .withOriginConnInfo(connectionInfo)
+        Pair<Status, FindNodeResponse> pair = cast(rpc(this)
                 .withDestConnInfo(destinationConnectionInfo)
                 .type(FIND_NODE)
                 .withId(id)
@@ -333,7 +341,7 @@ public class KademliaNode {
      * @param key and ID representing data stored in the network
      * @return a byte[] with the stored info if found, null otherwise
      */
-    public byte[] findValue(Id key, DataType dataType) {
+    public byte[] findValue(Id key) {
         try {
             List<DistancedConnectionInfo> closestInfosList = routingTable.findClosest(key);
 
@@ -349,7 +357,6 @@ public class KademliaNode {
                         .withDestConnInfo(info)
                         .type(FIND_VALUE)
                         .withId(key)
-                        .withDataType(dataType)
                         .call(),
                     Status.class,
                     FindValueResponse.class
@@ -392,7 +399,7 @@ public class KademliaNode {
      * @param data the data in byte[]
      * @return true if at least one node successfully stored the <key, value> pair, false otherwise
      */
-    public boolean store(Id key, byte[] data, DataType dataType) {
+    public boolean store(Id key, byte[] data) {
         try {
             List<DistancedConnectionInfo> closestInfoList = routingTable.findClosest(key);
 
@@ -403,7 +410,6 @@ public class KademliaNode {
                     cast(rpc(this)
                             .withDestConnInfo(info).type(STORE)
                             .withData(key, data)
-                            .withDataType(dataType)
                             .call(),
                         Status.class,
                         StoreResponse.class
@@ -471,12 +477,12 @@ public class KademliaNode {
                     .withDestConnInfo(destinationInfo)
                     .type(GOSSIP)
                     .withData(dataId, data)
+                    .withVisitedIds(visitedNodeIds)
                     .call(),
                 Status.class,
                 GossipResponse.class
                 )
             );
-
         } catch (RoutingTableException e) {
             logger.warning(e.getMessage());
         }
@@ -492,7 +498,6 @@ public class KademliaNode {
         private NodeType type = NODE;
         private BlockchainRepo blockchain;
         private ItemsRepo itemsRepo;
-        private BidsRepo bidsRepo;
 
         private Builder() {
         }
@@ -530,21 +535,6 @@ public class KademliaNode {
             return this;
         }
 
-        public Builder addBlockchainRepo(BlockchainRepo blockchain) {
-            this.blockchain = blockchain;
-            return this;
-        }
-
-        public Builder addTopicRepo(ItemsRepo itemsRepo) {
-            this.itemsRepo = itemsRepo;
-            return this;
-        }
-
-        public Builder addBidsRepo(BidsRepo bidsRepo) {
-            this.bidsRepo = bidsRepo;
-            return this;
-        }
-
         /**
          * Specifies the NodeType of this node
          *
@@ -565,11 +555,11 @@ public class KademliaNode {
             SslContext sslContext = loadServerTlsCredentials();
             switch (type) {
                 case BOOTSTRAP_NODE:
-                    return new KademliaNode(BOOTSTRAP_NODE_ID, BOOTSTRAP_NODE_ADDR, BOOTSTRAP_NODE_PORT, blockchain, itemsRepo, bidsRepo, sslContext);
+                    return new KademliaNode(BOOTSTRAP_NODE_ID, BOOTSTRAP_NODE_ADDR, BOOTSTRAP_NODE_PORT, sslContext);
                 case NODE:
                 default:
-                    return isNull(port) ? new KademliaNode(id, address, blockchain, itemsRepo, bidsRepo, sslContext)
-                        : new KademliaNode(id, address, port, blockchain, itemsRepo, bidsRepo, sslContext);
+                    return isNull(port) ? new KademliaNode(id, address, sslContext)
+                        : new KademliaNode(id, address, port, sslContext);
             }
         }
     }
