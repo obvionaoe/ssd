@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static pt.up.fc.dcc.ssd.common.Pair.cast;
+import static pt.up.fc.dcc.ssd.common.Utils.isNotNull;
 import static pt.up.fc.dcc.ssd.common.Utils.isNull;
 import static pt.up.fc.dcc.ssd.p2p.Config.*;
 import static pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo.fromGrpcConnectionInfo;
@@ -68,6 +69,7 @@ public class KademliaNode {
         ServerBuilder<?> sb = NettyServerBuilder.forPort(0).sslContext(sslContext);
         sb.addService(new KademliaImpl(this));
         server = sb.build();
+        started = false;
         // TODO: Add timer for routing table management pings
     }
 
@@ -86,9 +88,13 @@ public class KademliaNode {
      * @throws IOException if there's a problem while starting this node
      */
     public void start() throws IOException {
-        server.start();
-        connectionInfo = new ConnectionInfo(id, address, server.getPort());
-        started = true;
+        if (!started) {
+            server.start();
+            connectionInfo = new ConnectionInfo(id, address, server.getPort());
+            started = true;
+        } else {
+            logger.warning("This node has already been started!");
+        }
     }
 
     /**
@@ -98,10 +104,10 @@ public class KademliaNode {
      */
     public boolean stop() throws InterruptedException {
         if (started) {
-            // TODO: leave();
+            leave();
             return server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
         } else {
-            logger.warning("This node has not been started yet");
+            logger.warning("This node has not been started yet!");
             return false;
         }
     }
@@ -462,26 +468,67 @@ public class KademliaNode {
      *
      * @param dataId the id of the data to gossip
      * @param data   the data to gossip
+     * @return true if at least one node accepted the request, false otherwise
      */
-    public void gossip(Id dataId, byte[] data, List<Id> visitedNodeIds) {
+    public boolean gossip(Id dataId, byte[] data) {
+        return gossip(dataId, data, null);
+    }
+
+    /**
+     * Passes the given data to all the nodes on the network
+     *
+     * @param dataId         the id of the data to gossip
+     * @param data           the data to gossip
+     * @param visitedNodeIds list of Ids of the already visited nodes
+     * @return true if at least one node accepted the request, false otherwise
+     */
+    public boolean gossip(Id dataId, byte[] data, List<Id> visitedNodeIds) {
         try {
             List<DistancedConnectionInfo> allConnectionInfos = routingTable.getAll();
 
-            visitedNodeIds.forEach(visitedId ->
-                allConnectionInfos.removeIf(info ->
-                    info.getId().equals(visitedId)
+            if (isNotNull(visitedNodeIds)) {
+                visitedNodeIds.forEach(visitedId ->
+                    allConnectionInfos.removeIf(info ->
+                        info.getId().equals(visitedId)
+                    )
+                );
+            }
+
+            List<Pair<Status, GossipResponse>> responses = new ArrayList<>();
+
+            allConnectionInfos.forEach(destinationInfo ->
+                responses.add(cast(rpc(this)
+                        .withDestConnInfo(destinationInfo)
+                        .type(GOSSIP)
+                        .withData(dataId, data)
+                        .withVisitedIds(visitedNodeIds)
+                        .call(),
+                    Status.class,
+                    GossipResponse.class
+                    )
                 )
             );
 
-            allConnectionInfos.forEach(destinationInfo -> cast(rpc(this)
+            return responses.stream().anyMatch(responsePair -> responsePair.first().equals(ACCEPTED));
+        } catch (RoutingTableException e) {
+            logger.warning(e.getMessage());
+            return false;
+        }
+    }
+
+    public List<byte[]> findItems(Id topic) {
+
+    }
+
+    private void leave() {
+        try {
+            List<DistancedConnectionInfo> allConnectionInfos = routingTable.getAll();
+
+            allConnectionInfos.forEach(destinationInfo ->
+                rpc(this)
                     .withDestConnInfo(destinationInfo)
-                    .type(GOSSIP)
-                    .withData(dataId, data)
-                    .withVisitedIds(visitedNodeIds)
-                    .call(),
-                Status.class,
-                GossipResponse.class
-                )
+                    .type(LEAVE)
+                    .call()
             );
         } catch (RoutingTableException e) {
             logger.warning(e.getMessage());

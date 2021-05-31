@@ -5,6 +5,8 @@ option java_outer_classname = "P2P";
 
 package pt.up.fc.dcc.ssd.p2p.grpc;
 
+import "google/protobuf/empty.proto";
+
 service Kademlia {
   rpc ping (PingRequest) returns (PingResponse) {}
 
@@ -18,9 +20,9 @@ service Kademlia {
 
   rpc findValue (FindValueRequest) returns (FindValueResponse) {}
 
-  rpc leave (LeaveRequest) returns (LeaveResponse) {}
+  rpc findItems (FindItemsRequest) returns (FindItemsResponse) {}
 
-
+  rpc leave (LeaveRequest) returns (google.protobuf.Empty) {}
 }
 
 // Requests
@@ -38,21 +40,6 @@ message StoreRequest {
   Data data = 3;
 }
 
-message FindNodeRequest {
-  string destId = 1;
-  GrpcConnectionInfo originConnectionInfo = 2;
-}
-
-message FindValueRequest {
-  string key = 1;
-  GrpcConnectionInfo originConnectionInfo = 2;
-  DataType dataType = 3;
-}
-
-message LeaveRequest {
-  string id = 1;
-}
-
 message GossipRequest {
   GrpcConnectionInfo originConnectionInfo = 1;
   repeated string visitedNodeIds = 2;
@@ -64,6 +51,27 @@ message BidRequest {
   GrpcConnectionInfo originConnectionInfo = 1;
   string itemId = 2;
   float bid = 3;
+}
+
+message FindNodeRequest {
+  string destId = 1;
+  GrpcConnectionInfo originConnectionInfo = 2;
+}
+
+message FindValueRequest {
+  string key = 1;
+  GrpcConnectionInfo originConnectionInfo = 2;
+  DataType dataType = 3;
+}
+
+message FindItemsRequest {
+  string topic = 1;
+  GrpcConnectionInfo originConnectionInfo = 2;
+  DataType dataType = 3;
+}
+
+message LeaveRequest {
+  string id = 1;
 }
 
 // Responses
@@ -98,12 +106,13 @@ message FindValueResponse {
   repeated GrpcConnectionInfo connectionInfos = 3;
 }
 
-message LeaveResponse {
+message FindItemsResponse {
   Status status = 1;
+  Data data = 2;
+  repeated GrpcConnectionInfo connectionInfos = 3;
 }
 
 // Other Messages
-
 message GrpcConnectionInfo {
   string id = 1;
   string address = 2;

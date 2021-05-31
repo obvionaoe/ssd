@@ -155,40 +155,6 @@ public class RpcCall {
 
                     pair = pair(storeResponse.getStatus(), storeResponse);
                     break;
-                case FIND_NODE:
-                    if (isNull(idToFind)) {
-                        throw new NullPointerException("Missing lookup id!");
-                    }
-
-                    FindNodeResponse findNodeResponse = stub.findNode(FindNodeRequest
-                        .newBuilder()
-                        .setDestId(idToFind.toBinaryString())
-                        .setOriginConnectionInfo(self.getConnectionInfo()
-                            .toDistancedConnectionInfo()
-                            .toGrpcConnectionInfo()
-                        )
-                        .build()
-                    );
-
-                    pair = pair(ACCEPTED, findNodeResponse);
-                    break;
-                case FIND_VALUE:
-                    if (isNull(idToFind)) {
-                        throw new NullPointerException("Missing lookup id!");
-                    }
-
-                    FindValueResponse findValueResponse = stub.findValue(FindValueRequest
-                        .newBuilder()
-                        .setOriginConnectionInfo(self.getConnectionInfo()
-                            .toDistancedConnectionInfo()
-                            .toGrpcConnectionInfo()
-                        )
-                        .setKey(idToFind.toBinaryString())
-                        .build()
-                    );
-
-                    pair = pair(findValueResponse.getStatus(), findValueResponse);
-                    break;
                 case GOSSIP:
                     if (isNull(data) || isNull(dataType)) {
                         throw new NullPointerException("Missing data");
@@ -234,18 +200,65 @@ public class RpcCall {
 
                     pair = pair(bidResponse.getStatus(), bidResponse);
                     break;
-                case LEAVE:
+                case FIND_NODE:
                     if (isNull(idToFind)) {
-                        throw new NullPointerException("Missing node id!");
+                        throw new NullPointerException("Missing lookup id!");
                     }
 
-                    LeaveResponse leaveResponse = stub.leave(LeaveRequest
+                    FindNodeResponse findNodeResponse = stub.findNode(FindNodeRequest
                         .newBuilder()
-                        .setId(idToFind.toBinaryString())
+                        .setDestId(idToFind.toBinaryString())
+                        .setOriginConnectionInfo(self.getConnectionInfo()
+                            .toDistancedConnectionInfo()
+                            .toGrpcConnectionInfo()
+                        )
                         .build()
                     );
 
-                    pair = pair(leaveResponse.getStatus(), leaveResponse);
+                    pair = pair(ACCEPTED, findNodeResponse);
+                    break;
+                case FIND_VALUE:
+                    if (isNull(idToFind)) {
+                        throw new NullPointerException("Missing lookup id!");
+                    }
+
+                    FindValueResponse findValueResponse = stub.findValue(FindValueRequest
+                        .newBuilder()
+                        .setOriginConnectionInfo(self.getConnectionInfo()
+                            .toDistancedConnectionInfo()
+                            .toGrpcConnectionInfo()
+                        )
+                        .setKey(idToFind.toBinaryString())
+                        .build()
+                    );
+
+                    pair = pair(findValueResponse.getStatus(), findValueResponse);
+                    break;
+                case FIND_ITEMS:
+                    if (isNull(idToFind)) {
+                        throw new NullPointerException("Missing lookup id!");
+                    }
+
+                    FindItemsResponse findItemsResponse = stub.findItems(FindItemsRequest
+                        .newBuilder()
+                        .setOriginConnectionInfo(self.getConnectionInfo()
+                            .toDistancedConnectionInfo()
+                            .toGrpcConnectionInfo()
+                        )
+                        .setTopic(idToFind.toBinaryString())
+                        .build()
+                    );
+
+                    pair = pair(findItemsResponse.getStatus(), findItemsResponse);
+                    break;
+                case LEAVE:
+                    stub.leave(LeaveRequest
+                        .newBuilder()
+                        .setId(self.getId().toBinaryString())
+                        .build()
+                    );
+
+                    pair = null;
                     break;
             }
         } catch (StatusRuntimeException | SSLException e) {

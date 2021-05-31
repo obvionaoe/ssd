@@ -103,7 +103,8 @@ public class Id implements Serializable {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             hash = md.digest(data);
-        } catch (NoSuchAlgorithmException ignored) {}
+        } catch (NoSuchAlgorithmException ignored) {
+        }
 
         return hash;
     }

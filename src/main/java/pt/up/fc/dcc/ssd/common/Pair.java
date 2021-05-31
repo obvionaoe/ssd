@@ -11,14 +11,33 @@ public class Pair<T, R> {
         this.second = second;
     }
 
+    /**
+     * Creates a new pair
+     *
+     * @param first  the first item in the pair
+     * @param second the second item in the pair
+     * @param <T>    the type of the first item in the pair
+     * @param <R>    the type of the second item in the pair
+     * @return a Pair<T, R>
+     */
     public static <T, R> Pair<T, R> pair(T first, R second) {
         return new Pair<>(first, second);
     }
 
+    /**
+     * Gets the first item in the pair
+     *
+     * @return first item in the pair
+     */
     public T first() {
         return first;
     }
 
+    /**
+     * Gets the second item in the pair
+     *
+     * @return second item in the pair
+     */
     public R second() {
         return second;
     }

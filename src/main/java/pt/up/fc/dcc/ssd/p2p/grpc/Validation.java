@@ -1,5 +1,7 @@
 package pt.up.fc.dcc.ssd.p2p.grpc;
 
+import static pt.up.fc.dcc.ssd.p2p.Config.ID_N_BITS;
+
 // TODO: finish this properly
 public class Validation {
     public static boolean validateRequest(PingRequest request) {
@@ -26,8 +28,16 @@ public class Validation {
         return true;
     }
 
+    public static boolean validateRequest(FindItemsRequest request) {
+        return validateId(request.getTopic());
+    }
+
     public static boolean validateRequest(LeaveRequest request) {
-        return false;
+        return validateId(request.getId());
+    }
+
+    private static boolean validateId(String id) {
+        return id.length() == ID_N_BITS;
     }
 
     private static boolean validateConnectionInfo(GrpcConnectionInfo info) {

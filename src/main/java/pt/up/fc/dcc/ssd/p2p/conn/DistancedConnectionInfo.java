@@ -48,10 +48,10 @@ public class DistancedConnectionInfo {
 
     public GrpcConnectionInfo toGrpcConnectionInfo() {
         GrpcConnectionInfo.Builder builder = GrpcConnectionInfo
-                .newBuilder()
-                .setId(getId().toBinaryString())
-                .setAddress(getAddress())
-                .setPort(getPort());
+            .newBuilder()
+            .setId(getId().toBinaryString())
+            .setAddress(getAddress())
+            .setPort(getPort());
 
         if (distance != null) {
             builder.setDistance(distance.toString());
@@ -62,10 +62,10 @@ public class DistancedConnectionInfo {
 
     public static DistancedConnectionInfo fromGrpcConnectionInfo(GrpcConnectionInfo connectionInfo) {
         return new DistancedConnectionInfo(
-                Id.idFromBinaryString(connectionInfo.getId()),
-                connectionInfo.getAddress(),
-                connectionInfo.getPort(),
-                connectionInfo.getDistance().equals("") ? null : new BigInteger(connectionInfo.getDistance())
+            Id.idFromBinaryString(connectionInfo.getId()),
+            connectionInfo.getAddress(),
+            connectionInfo.getPort(),
+            connectionInfo.getDistance().equals("") ? null : new BigInteger(connectionInfo.getDistance())
         );
     }
 
@@ -76,9 +76,9 @@ public class DistancedConnectionInfo {
     @Override
     public String toString() {
         return "DistancedConnectionInfo{" +
-                "connectionInfo=" + connectionInfo +
-                ", distance=" + distance +
-                '}';
+            "connectionInfo=" + connectionInfo +
+            ", distance=" + distance +
+            '}';
     }
 
     @Override

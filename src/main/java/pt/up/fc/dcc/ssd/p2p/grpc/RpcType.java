@@ -7,5 +7,6 @@ public enum RpcType {
     BID,
     FIND_NODE,
     FIND_VALUE,
+    FIND_ITEMS,
     LEAVE
 }

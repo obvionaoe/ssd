@@ -1,6 +1,7 @@
 package pt.up.fc.dcc.ssd.p2p.grpc;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Empty;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import pt.up.fc.dcc.ssd.common.Repository;
@@ -85,6 +86,52 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
     }
 
     @Override
+    public void gossip(GossipRequest request, StreamObserver<GossipResponse> responseObserver) {
+        if (!validateRequest(request)) {
+            responseObserver.onError(new StatusRuntimeException(INVALID_ARGUMENT));
+            return;
+        }
+
+        responseObserver.onNext(GossipResponse
+            .newBuilder()
+            .setStatus(ACCEPTED)
+            .build()
+        );
+        responseObserver.onCompleted();
+
+        Id key = idFromBinaryString(request.getData().getKey());
+        byte[] data = request.getData().getValue().toByteArray();
+
+
+        self.getBlockchain().put(key, data);
+
+        List<Id> visitedIds = new ArrayList<>();
+
+        request.getVisitedNodeIdsList().forEach(string -> visitedIds.add(idFromBinaryString(string)));
+
+        self.gossip(key, data, visitedIds);
+    }
+
+    @Override
+    public void bid(BidRequest request, StreamObserver<BidResponse> responseObserver) {
+        if (!validateRequest(request)) {
+            responseObserver.onError(new StatusRuntimeException(INVALID_ARGUMENT));
+            return;
+        }
+
+        BidResponse.Builder response = BidResponse.newBuilder();
+
+        if (self.getItemsRepo().bid(idFromBinaryString(request.getItemId()), request.getBid())) {
+            response.setStatus(ACCEPTED);
+        } else {
+            response.setStatus(FAILED);
+        }
+
+        responseObserver.onNext(response.build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void findNode(FindNodeRequest request, StreamObserver<FindNodeResponse> responseObserver) {
         if (!validateRequest(request)) {
             responseObserver.onError(new StatusRuntimeException(INVALID_ARGUMENT));
@@ -160,54 +207,30 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
     }
 
     @Override
-    public void leave(LeaveRequest request, StreamObserver<LeaveResponse> responseObserver) {
+    public void findItems(FindItemsRequest request, StreamObserver<FindItemsResponse> responseObserver) {
+        if (!validateRequest(request)) {
+            responseObserver.onError(new StatusRuntimeException(INVALID_ARGUMENT));
+            return;
+        }
+
         // TODO
     }
 
     @Override
-    public void bid(BidRequest request, StreamObserver<BidResponse> responseObserver) {
+    public void leave(LeaveRequest request, StreamObserver<Empty> responseObserver) {
         if (!validateRequest(request)) {
             responseObserver.onError(new StatusRuntimeException(INVALID_ARGUMENT));
             return;
         }
 
-        BidResponse.Builder response = BidResponse.newBuilder();
-
-        if (self.getItemsRepo().bid(idFromBinaryString(request.getItemId()), request.getBid())) {
-            response.setStatus(ACCEPTED);
-        } else {
-            response.setStatus(FAILED);
-        }
-
-        responseObserver.onNext(response.build());
-        responseObserver.onCompleted();
-    }
-
-    @Override
-    public void gossip(GossipRequest request, StreamObserver<GossipResponse> responseObserver) {
-        if (!validateRequest(request)) {
-            responseObserver.onError(new StatusRuntimeException(INVALID_ARGUMENT));
-            return;
-        }
-
-        responseObserver.onNext(GossipResponse
-            .newBuilder()
-            .setStatus(ACCEPTED)
-            .build()
-        );
+        responseObserver.onNext(Empty.newBuilder().build());
         responseObserver.onCompleted();
 
-        Id key = idFromBinaryString(request.getData().getKey());
-        byte[] data = request.getData().getValue().toByteArray();
-
-
-        self.getBlockchain().put(key, data);
-
-        List<Id> visitedIds = new ArrayList<>();
-
-        request.getVisitedNodeIdsList().forEach(string -> visitedIds.add(idFromBinaryString(string)));
-
-        self.gossip(key, data, visitedIds);
+        try {
+            self.getRoutingTable().remove(idFromBinaryString(request.getId()));
+        } catch (RoutingTableException e) {
+            e.printStackTrace();
+        }
     }
 
     private Repository getRepo(DataType dataType) {

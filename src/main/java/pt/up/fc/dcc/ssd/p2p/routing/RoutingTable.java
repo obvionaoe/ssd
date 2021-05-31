@@ -61,7 +61,8 @@ public class RoutingTable {
     private int findBucket(Id destinationId) throws RoutingTableException {
         BigInteger distance;
 
-        if (nodeId.toString().equals(destinationId.toString())) throw new RoutingTableException("A node can't call itself");
+        if (nodeId.toString().equals(destinationId.toString()))
+            throw new RoutingTableException("A node can't call itself");
 
         try {
             distance = distance(nodeId, destinationId);
@@ -105,7 +106,7 @@ public class RoutingTable {
         List<DistancedConnectionInfo> connectionInfos = new ArrayList<>(buckets.get(bucketPos).get(id));
         // is this the correct way? No, but works for small networks and for the current state of affairs
         for (int i = 0; connectionInfos.size() < MAX_BUCKET_SIZE
-                && ((bucketPos + i) < ID_N_BITS || (bucketPos - i) >= 0); i++) {
+            && ((bucketPos + i) < ID_N_BITS || (bucketPos - i) >= 0); i++) {
             if (bucketPos - i >= 0) {
                 connectionInfos.addAll(buckets.get(bucketPos - i).get(id));
             }
@@ -133,8 +134,8 @@ public class RoutingTable {
     @Override
     public String toString() {
         return "RoutingTable{\n" +
-                "nodeId=" + nodeId +
-                ",\nbuckets=" + buckets +
-                "\n}";
+            "nodeId=" + nodeId +
+            ",\nbuckets=" + buckets +
+            "\n}";
     }
 }

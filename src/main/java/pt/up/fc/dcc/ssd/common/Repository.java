@@ -12,7 +12,7 @@ public interface Repository {
     boolean containsKey(Id key);
 
     /**
-     *  Gets the stored item as a byte array
+     * Gets the stored item as a byte array
      *
      * @param key the Id of the item
      * @return a byte array containing the item associated with the provided key
@@ -22,7 +22,7 @@ public interface Repository {
     /**
      * Inserts a byte array in the repository with the provided key
      *
-     * @param key the Id
+     * @param key       the Id
      * @param byteArray the byte array to insert in the repository
      * @return true if it was a valid insertion, false otherwise
      */

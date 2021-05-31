@@ -24,14 +24,14 @@ public class ClientNode {
 
     }
 
-    public void setItem(Id topic, String bid, String item ){
-        this.item = new ClientItem(kademlia.getId(), topic , Float.parseFloat(bid), item);
+    public void setItem(Id topic, String bid, String item) {
+        this.item = new ClientItem(kademlia.getId(), topic, Float.parseFloat(bid), item);
         itemsRepo.put(topic, toByteArray(item));
 
     }
 
     // TODO: seller communication
-    public void bidTalk(){
+    public void bidTalk() {
 
     }
 }

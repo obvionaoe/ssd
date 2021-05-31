@@ -105,8 +105,8 @@ public class KBucket {
     @Override
     public String toString() {
         return "KBucket{\n" +
-                "nodeIds=" + nodeIds +
-                ",\nnodeMap=" + nodeMap +
-                '}';
+            "nodeIds=" + nodeIds +
+            ",\nnodeMap=" + nodeMap +
+            '}';
     }
 }

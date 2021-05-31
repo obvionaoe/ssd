@@ -34,10 +34,10 @@ public class ConnectionInfo {
     @Override
     public String toString() {
         return "ConnectionInfo{" +
-                "id=" + id +
-                ", address='" + address + '\'' +
-                ", port=" + port +
-                '}';
+            "id=" + id +
+            ", address='" + address + '\'' +
+            ", port=" + port +
+            '}';
     }
 
     @Override

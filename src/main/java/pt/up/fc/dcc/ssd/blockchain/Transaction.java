@@ -28,7 +28,7 @@ public class Transaction {
 
     public boolean processTransaction() {
 
-        if (verifySignature() == false) {
+        if (!verifySignature()) {
             System.out.println("#Transaction Signature failed to verify");
             return false;
         }
