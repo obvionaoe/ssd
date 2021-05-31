@@ -1,5 +1,6 @@
 package pt.up.fc.dcc.ssd.auction;
 
+import pt.up.fc.dcc.ssd.blockchain.Transaction;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
 import java.nio.charset.StandardCharsets;
@@ -38,6 +39,7 @@ public class Client {
             System.out.println("What's the minimum price'?");
             float bid = Float.parseFloat(scan.nextLine());
 
+            // TODO: put his pk
             clientNode.setItem(
                 Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
                 bid,
@@ -62,10 +64,10 @@ public class Client {
 
             // TODO: Display items from topic
 
+
             System.out.println("What item you want to buy?");
             String item = scan.nextLine();
-            Id itemId = Id.idFromData(topic.getBytes(StandardCharsets.UTF_8));
-
+            Id itemId = Id.idFromData(item.getBytes(StandardCharsets.UTF_8));
 
             System.out.println("What's your bid'?");
             float bid = Float.parseFloat(scan.nextLine());
@@ -80,8 +82,18 @@ public class Client {
                     itemId
             ));
 
-            clientNode.kademlia.bid(sellerId, itemId, bid);
+            boolean accepted  = clientNode.kademlia.bid(sellerId, itemId, bid);
 
+            if(accepted){
+                Transaction transaction = new Transaction(
+                        clientNode.pbk,
+                        // TODO: itemsList[choosenItemIndex].pbk,
+                        bid,
+                        null
+                );
+
+                transaction.processTransaction();
+            }
         }
     }
 }
