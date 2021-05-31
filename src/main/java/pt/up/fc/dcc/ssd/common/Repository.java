@@ -24,7 +24,6 @@ public interface Repository {
      *
      * @param key       the Id
      * @param byteArray the byte array to insert in the repository
-     * @return true if it was a valid insertion, false otherwise
      */
-    boolean put(Id key, byte[] byteArray);
+    void put(Id key, byte[] byteArray);
 }

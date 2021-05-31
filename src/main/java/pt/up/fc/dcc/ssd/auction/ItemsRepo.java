@@ -20,9 +20,8 @@ public class ItemsRepo implements Repository {
     }
 
     @Override
-    public boolean put(Id key, byte[] byteArray) {
+    public void put(Id key, byte[] byteArray) {
         repo.put(key, byteArray);
-        return false;
     }
 
     /**
