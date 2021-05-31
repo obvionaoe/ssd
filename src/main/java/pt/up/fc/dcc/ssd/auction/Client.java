@@ -30,16 +30,13 @@ public class Client {
 
         if (operation.equals("Seller")) {
             System.out.println("In what topic are you selling?");
-            scan = new Scanner(System.in);
             String topic = scan.nextLine();
 
             System.out.println("What item are you selling?");
-            scan = new Scanner(System.in);
             String item = scan.nextLine();
 
             System.out.println("What's the minimum price'?");
-            scan = new Scanner(System.in);
-            String bid = scan.nextLine();
+            float bid = Float.parseFloat(scan.nextLine());
 
             clientNode.setItem(
                 Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
@@ -51,9 +48,12 @@ public class Client {
                 toByteArray(item)
             );
 
+            while(true){
+
+            }
+
         } else {
             System.out.println("From what topic do you want to buy?");
-            scan = new Scanner(System.in);
             String topic = scan.nextLine();
 
             clientNode.kademlia.findValue(
@@ -63,19 +63,25 @@ public class Client {
             // TODO: Display items from topic
 
             System.out.println("What item you want to buy?");
-            scan = new Scanner(System.in);
             String item = scan.nextLine();
+            Id itemId = Id.idFromData(topic.getBytes(StandardCharsets.UTF_8));
+
 
             System.out.println("What's your bid'?");
-            scan = new Scanner(System.in);
-            String bid = scan.nextLine();
+            float bid = Float.parseFloat(scan.nextLine());
 
             clientNode.setItem(
-                Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
+                itemId,
                 bid,
                 item);
 
-            //
+            // Talk to seller
+            Id sellerId =  Id.toObject(clientNode.kademlia.findValue(
+                    itemId
+            ));
+
+            clientNode.kademlia.bid(sellerId, itemId, bid);
+
         }
     }
 }
