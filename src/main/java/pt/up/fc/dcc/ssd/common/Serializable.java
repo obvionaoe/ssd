@@ -1,5 +1,6 @@
 package pt.up.fc.dcc.ssd.common;
 
+import pt.up.fc.dcc.ssd.auction.SellerItem;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
 import java.io.*;
@@ -29,12 +30,16 @@ public class Serializable {
 
     public static void main(String[] args) {
         // Example
-        Id test = new Id();
+        SellerItem test = new SellerItem(
+                Id.idFromBinaryString("1010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
+                "testTopic",
+                123,
+                "testItem",
+                null
+                );
 
-        System.out.println(test);
+        SellerItem d = (SellerItem) toObject(toByteArray(test));
 
-        Id d = (Id) toObject(toByteArray(test));
-
-        System.out.println(d);
+        assert test.topicId == d.topicId;
     }
 }

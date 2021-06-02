@@ -1,7 +1,6 @@
 package pt.up.fc.dcc.ssd.auction;
 
 import pt.up.fc.dcc.ssd.blockchain.BlockchainRepo;
-import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 
 import javax.net.ssl.SSLException;
@@ -13,8 +12,8 @@ import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 public class ClientNode {
     public String role;
     public KademliaNode kademlia;
-    public ClientItem item;
-    public ItemsRepo itemsRepo;
+    public SellerItem item;
+    public ItemsRepo itemsRepo = new ItemsRepo();
     public BlockchainRepo blockchainRepo;
     public PublicKey pbk;
     public PrivateKey pvk;
@@ -34,9 +33,8 @@ public class ClientNode {
 
     }
 
-    public void setItem(Id topic, float bid, String item) {
-        this.item = new ClientItem(kademlia.getId(), topic, bid, item, pbk);
-        itemsRepo.put(topic, toByteArray(item));
-
+    public void setItem(String topic, float bid, String item) {
+        this.item = new SellerItem(kademlia.getId(), topic, bid, item, pbk);
+        itemsRepo.put(this.item.topicId, toByteArray(this.item));
     }
 }

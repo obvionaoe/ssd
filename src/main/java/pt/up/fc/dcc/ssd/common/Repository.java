@@ -17,13 +17,13 @@ public interface Repository {
      * @param key the Id of the item
      * @return a byte array containing the item associated with the provided key
      */
-    byte[] get(Id key);
+    byte[]get(Id key);
 
     /**
      * Inserts a byte array in the repository with the provided key
-     *
-     * @param key       the Id
+     *  @param key       the Id
      * @param byteArray the byte array to insert in the repository
+     * @return
      */
-    void put(Id key, byte[] byteArray);
+    boolean put(Id key, byte[] byteArray);
 }

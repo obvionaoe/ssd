@@ -1,16 +1,18 @@
 package pt.up.fc.dcc.ssd.auction;
 
-import pt.up.fc.dcc.ssd.blockchain.Transaction;
 import pt.up.fc.dcc.ssd.common.Repository;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
-import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
+
+import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 
 public class ItemsRepo implements Repository {
     Scanner scan = new Scanner(System.in);
-    HashMap<Id, byte[]> repo = new HashMap<Id, byte[]>();
+    HashMap<Id, List<byte[]>> repo = new HashMap<>();
 
     @Override
     public boolean containsKey(Id key) {
@@ -19,12 +21,23 @@ public class ItemsRepo implements Repository {
 
     @Override
     public byte[] get(Id key) {
-        return repo.get(key);
+        if(repo.containsKey(key))
+            return toByteArray(repo.get(key));
+        return null;
     }
 
     @Override
-    public void put(Id key, byte[] byteArray) {
-        repo.put(key, byteArray);
+    public boolean put(Id key, byte[] byteArray) {
+        if(containsKey(key)){
+            List<byte[]> prev = repo.get(key);
+            prev.add(byteArray);
+            repo.put(key, prev);
+            return true;
+        }else{
+            List<byte[]> newTopic = Arrays.asList(byteArray);
+            repo.put(key, newTopic);
+            return true;
+        }
     }
 
     /**

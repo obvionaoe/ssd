@@ -4,10 +4,12 @@ import pt.up.fc.dcc.ssd.blockchain.Transaction;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
 import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
+import static pt.up.fc.dcc.ssd.common.Serializable.toObject;
 
 public class Client {
     private static final Logger logger = Logger.getLogger(Client.class.getName());
@@ -15,8 +17,7 @@ public class Client {
 
     public static void main(String[] args) throws Exception {
 
-
-        // Show available topics
+        // Get Role
         System.out.println("Buyer or Seller?");
         Scanner scan = new Scanner(System.in);
         String operation = scan.nextLine();
@@ -28,6 +29,7 @@ public class Client {
         clientNode = new ClientNode(operation);
 
         clientNode.kademlia.start();
+        clientNode.kademlia.bootstrap();
 
         if (operation.equals("Seller")) {
             System.out.println("In what topic are you selling?");
@@ -39,55 +41,67 @@ public class Client {
             System.out.println("What's the minimum price'?");
             float bid = Float.parseFloat(scan.nextLine());
 
-            // TODO: put his pk
             clientNode.setItem(
-                Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
+                topic,
                 bid,
                 item);
 
+            // Add item associated with topic Id to the network
             clientNode.kademlia.store(
-                Id.idFromData(topic.getBytes(StandardCharsets.UTF_8)),
-                toByteArray(item)
+                clientNode.item.topicId,
+                toByteArray(clientNode.item)
             );
 
+            // Wait for biding
+            System.out.println("Waiting for bids....");
             while(true){
-
             }
 
         } else {
+            // TODO: List of topics
             System.out.println("From what topic do you want to buy?");
             String topic = scan.nextLine();
+            Id topicId = Id.idFromData(topic.getBytes(StandardCharsets.UTF_8));
 
-            clientNode.kademlia.findValue(
-                Id.idFromData(topic.getBytes(StandardCharsets.UTF_8))
+            // Get items in the network through the topic Id
+            List<byte[]> itemsList =  clientNode.kademlia.findItems(
+                topicId
             );
 
-            // TODO: Display items from topic
-
+            for (byte[] item: itemsList) {
+                SellerItem sellerItem = (SellerItem) toObject(item);
+                System.out.println("Name: " + sellerItem.itemName + "\nCurrent bid: " + sellerItem.bid);
+            }
 
             System.out.println("What item you want to buy?");
-            String item = scan.nextLine();
-            Id itemId = Id.idFromData(item.getBytes(StandardCharsets.UTF_8));
+            String chosenItemName = scan.nextLine();
 
-            System.out.println("What's your bid'?");
+            System.out.println("What's your bid?");
             float bid = Float.parseFloat(scan.nextLine());
 
-            clientNode.setItem(
-                itemId,
-                bid,
-                item);
+            // Find item and store it in clientNode
+            for (byte[] item: itemsList) {
+                SellerItem sellerItem = (SellerItem) toObject(item);
+                if(sellerItem.itemName == chosenItemName){
+                    clientNode.item = sellerItem;
+                    break;
+                }
+            }
 
-            // Talk to seller
-            Id sellerId =  Id.toObject(clientNode.kademlia.findValue(
-                    itemId
-            ));
+            if(clientNode.item == null){
+                throw new Exception("Chosen item didn't match any item in the list");
+            }
 
-            boolean accepted  = clientNode.kademlia.bid(sellerId, itemId, bid);
+            boolean accepted  = clientNode.kademlia.bid(
+                    clientNode.item.SellerId,
+                    clientNode.item.itemId,
+                    bid
+            );
 
             if(accepted){
                 Transaction transaction = new Transaction(
                         clientNode.pbk,
-                        // TODO: itemsList[choosenItemIndex].pbk,
+                        clientNode.item.sellerPbk,
                         bid,
                         null
                 );

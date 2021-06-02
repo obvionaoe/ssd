@@ -15,7 +15,7 @@ public class BlockchainRepo implements Repository {
     }
 
     @Override
-    public void put(Id key, byte[] byteArray) {
+    public boolean put(Id key, byte[] byteArray) {
         return false;
     }
 }
