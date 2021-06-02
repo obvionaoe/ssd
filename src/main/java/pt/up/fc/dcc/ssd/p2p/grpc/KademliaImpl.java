@@ -213,7 +213,38 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
             return;
         }
 
-        // TODO
+        Id key = idFromBinaryString(request.getTopic());
+
+        FindItemsResponse.Builder response = FindItemsResponse.newBuilder();
+
+        Repository repo = getRepo(request.getDataType());
+
+        if (repo.containsKey(key)) {
+
+            responseObserver.onNext(response
+                .setStatus(FOUND)
+                .setItems(ByteString.copyFrom(repo.get(key)))
+                .build()
+            );
+        } else {
+            List<DistancedConnectionInfo> infos;
+            try {
+                infos = self.getRoutingTable().findClosest(key);
+            } catch (RoutingTableException e) {
+                responseObserver.onError(new StatusRuntimeException(INTERNAL.withDescription(e.getMessage())));
+                return;
+            }
+
+            if (isNotNull(infos)) {
+                response.addAllConnectionInfos(infos.stream().map(DistancedConnectionInfo::toGrpcConnectionInfo).collect(Collectors.toList()));
+            }
+
+            responseObserver.onNext(response
+                .setStatus(NOT_FOUND)
+                .build()
+            );
+        }
+        responseObserver.onCompleted();
     }
 
     @Override

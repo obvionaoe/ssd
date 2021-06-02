@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static pt.up.fc.dcc.ssd.common.Pair.cast;
+import static pt.up.fc.dcc.ssd.common.Serializable.toObject;
 import static pt.up.fc.dcc.ssd.common.Utils.isNotNull;
 import static pt.up.fc.dcc.ssd.common.Utils.isNull;
 import static pt.up.fc.dcc.ssd.p2p.Config.*;
@@ -347,6 +348,7 @@ public class KademliaNode {
      * @param key and ID representing data stored in the network
      * @return a byte[] with the stored info if found, null otherwise
      */
+    @SuppressWarnings("DuplicatedCode")
     public byte[] findValue(Id key) {
         try {
             List<DistancedConnectionInfo> closestInfosList = routingTable.findClosest(key);
@@ -516,8 +518,60 @@ public class KademliaNode {
         }
     }
 
+    /**
+     * Tries to find items with the given topic on the network
+     *
+     * @param topic the topic to search for
+     * @return a list of Items in byte arrays form or null if none were found
+     */
+    @SuppressWarnings("DuplicatedCode")
     public List<byte[]> findItems(Id topic) {
+        try {
+            List<DistancedConnectionInfo> closestInfosList = routingTable.findClosest(topic);
 
+            if (closestInfosList.isEmpty()) {
+                logger.warning("Empty routing table, please bootstrap this node first!");
+                return null;
+            }
+
+            for (int i = 0; i <= closestInfosList.size() - 1; i++) {
+                DistancedConnectionInfo info = closestInfosList.get(i);
+
+                Pair<Status, FindItemsResponse> pair = cast(rpc(this)
+                        .withDestConnInfo(info)
+                        .type(FIND_ITEMS)
+                        .withId(topic)
+                        .call(),
+                    Status.class,
+                    FindItemsResponse.class
+                );
+
+                if (pair.first().equals(FOUND)) {
+                    return ((List<byte[]>) toObject(pair.second().getItems().toByteArray()));
+                } else if (pair.first().equals(NOT_FOUND)) {
+                    List<DistancedConnectionInfo> receivedInfos = fromGrpcConnectionInfo(pair
+                        .second()
+                        .getConnectionInfosList()
+                    );
+
+                    receivedInfos.removeIf(receivedInfo -> receivedInfo.getId().equals(id));
+
+                    // TODO: check if nodes have bigger distance
+                    receivedInfos.removeAll(closestInfosList);
+
+                    if (!receivedInfos.isEmpty()) {
+                        routingTable.update(receivedInfos);
+
+                        closestInfosList.addAll(closestInfosList.indexOf(info) + 1, receivedInfos);
+                    }
+                }
+            }
+
+            return null;
+        } catch (RoutingTableException e) {
+            logger.warning(e.getMessage());
+            return null;
+        }
     }
 
     private void leave() {
