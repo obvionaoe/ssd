@@ -4,7 +4,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
-import pt.up.fc.dcc.ssd.common.Repository;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
@@ -70,11 +69,10 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
 
         StoreResponse.Builder response = StoreResponse.newBuilder();
 
-        Repository repo = getRepo(request.getDataType());
-
         // TODO: should have keepAlive time
-        if (repo.put(idFromBinaryString(data.getKey()), data.getValue().toByteArray())) {
+        if (self.getItemsRepo().put(idFromBinaryString(data.getKey()), data.getValue().toByteArray())) {
             response.setStatus(ACCEPTED);
+            System.out.println("stored");
         } else {
             response.setStatus(FAILED);
         }
@@ -171,13 +169,11 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
 
         FindValueResponse.Builder response = FindValueResponse.newBuilder();
 
-        Repository repo = getRepo(request.getDataType());
-
-        if (repo.containsKey(key)) {
+        if (self.getItemsRepo().containsKey(key)) {
             Data data = Data
                 .newBuilder()
                 .setKey(request.getKey())
-                .setValue(ByteString.copyFrom(repo.get(key)))
+                //.setValue(ByteString.copyFrom(self.getItemsRepo().get(key)))
                 .build();
 
             responseObserver.onNext(response
@@ -216,16 +212,22 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         Id key = idFromBinaryString(request.getTopic());
 
         FindItemsResponse.Builder response = FindItemsResponse.newBuilder();
+        System.out.println("in");
 
-        Repository repo = getRepo(request.getDataType());
-
-        if (repo.containsKey(key)) {
-
-            responseObserver.onNext(response
-                .setStatus(FOUND)
-                .setItems(ByteString.copyFrom(repo.get(key)))
-                .build()
-            );
+        if (self.getItemsRepo().containsKey(key)) {
+            if (isNotNull(self.getItemsRepo().get(key)))
+                responseObserver.onNext(response
+                    .setStatus(FOUND)
+                    .addAllItems(
+                        self
+                            .getItemsRepo()
+                            .get(key)
+                            .stream()
+                            .map(ByteString::copyFrom)
+                            .collect(Collectors.toList())
+                    )
+                    .build()
+                );
         } else {
             List<DistancedConnectionInfo> infos;
             try {
@@ -262,9 +264,5 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         } catch (RoutingTableException e) {
             e.printStackTrace();
         }
-    }
-
-    private Repository getRepo(DataType dataType) {
-        return dataType.equals(DataType.TOPIC) ? self.getItemsRepo() : self.getBlockchain();
     }
 }

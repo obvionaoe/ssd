@@ -139,7 +139,7 @@ public class RpcCall {
                     pair = pair(pingResponse.getStatus(), pingResponse);
                     break;
                 case STORE:
-                    if (isNull(data) || isNull(dataType)) {
+                    if (isNull(data)) {
                         throw new NullPointerException("Missing data to store!");
                     }
 
@@ -149,7 +149,7 @@ public class RpcCall {
                             .toDistancedConnectionInfo()
                             .toGrpcConnectionInfo()
                         ).setData(data)
-                        .setDataType(dataType)
+                        .setDataType(DataType.TOPIC)
                         .build()
                     );
 

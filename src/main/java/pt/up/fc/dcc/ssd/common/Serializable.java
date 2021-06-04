@@ -40,6 +40,6 @@ public class Serializable {
 
         SellerItem d = (SellerItem) toObject(toByteArray(test));
 
-        assert test.topicId == d.topicId;
+        assert test.topicId.equals(d.topicId);
     }
 }

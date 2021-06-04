@@ -1,13 +1,15 @@
 package pt.up.fc.dcc.ssd.p2p;
 
+import pt.up.fc.dcc.ssd.common.Serializable;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 import pt.up.fc.dcc.ssd.p2p.node.NodeType;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 
 import static java.lang.Thread.sleep;
+import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 import static pt.up.fc.dcc.ssd.p2p.node.Id.idFromBinaryString;
 import static pt.up.fc.dcc.ssd.p2p.node.Id.idFromData;
 
@@ -94,13 +96,13 @@ public class Example {
 
         System.out.println("\nStore/FindValue Example:\n");
 
-        byte[] data = "345".getBytes(StandardCharsets.UTF_8);
-        Id key = idFromData(data);
+        byte[] data = toByteArray("345");
+        Id key = idFromData(toByteArray("Numero"));
 
         System.out.println("node1: store(\"345\") true == " + node1.store(key, data));
-        System.out.println("node1: findValue(idFromData(\"345\")) = " + new String(node1.findValue(key)));
-        System.out.println("node3: findValue(idFromData(\"345\")) = " + new String(node3.findValue(key)));
-        System.out.println("bootstrapNode: findValue(idFromData(\"345\")) = " + new String(bootstrapNode.findValue(key)));
+        System.out.println("node1: findItems(idFromData(\"345\")) = " + node1.findItems(key).stream().map(Serializable::toObject).collect(Collectors.toList()));
+        System.out.println("node3: findItems(idFromData(\"345\")) = " + node3.findItems(key).stream().map(Serializable::toObject).collect(Collectors.toList()));
+        System.out.println("bootstrapNode: findItems(idFromData(\"345\")) = " + bootstrapNode.findItems(key).stream().map(Serializable::toObject).collect(Collectors.toList()));
 
         bootstrapNode.stop();
         node1.stop();

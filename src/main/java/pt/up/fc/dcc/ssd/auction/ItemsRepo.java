@@ -3,12 +3,10 @@ package pt.up.fc.dcc.ssd.auction;
 import pt.up.fc.dcc.ssd.common.Repository;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
-
-import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 
 public class ItemsRepo implements Repository {
     Scanner scan = new Scanner(System.in);
@@ -16,28 +14,30 @@ public class ItemsRepo implements Repository {
 
     @Override
     public boolean containsKey(Id key) {
+        System.out.println("contains?");
         return repo.containsKey(key);
     }
 
-    @Override
-    public byte[] get(Id key) {
-        if(repo.containsKey(key))
-            return toByteArray(repo.get(key));
+    public List<byte[]> get(Id key) {
+        if (repo.containsKey(key)) {
+            return repo.get(key);
+        }
         return null;
     }
 
     @Override
     public boolean put(Id key, byte[] byteArray) {
-        if(containsKey(key)){
+        if (containsKey(key)) {
             List<byte[]> prev = repo.get(key);
             prev.add(byteArray);
             repo.put(key, prev);
-            return true;
-        }else{
-            List<byte[]> newTopic = Arrays.asList(byteArray);
-            repo.put(key, newTopic);
-            return true;
+        } else {
+            System.out.println("in the repo");
+            List<byte[]> newTopicList = new ArrayList<>();
+            newTopicList.add(byteArray);
+            repo.put(key, newTopicList);
         }
+        return true;
     }
 
     /**
@@ -51,9 +51,9 @@ public class ItemsRepo implements Repository {
         System.out.println("New bid for " + itemId + "\nBid: " + bid);
         System.out.println("Accept? (Y/N)");
         String response = scan.nextLine();
-        if(response.equals("Y")){
+        if (response.equals("Y")) {
             return true;
-        }else if(response.equals("N")){
+        } else if (response.equals("N")) {
             return false;
         }
         return true;

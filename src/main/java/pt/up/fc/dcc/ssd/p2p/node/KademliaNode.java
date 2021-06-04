@@ -1,5 +1,6 @@
 package pt.up.fc.dcc.ssd.p2p.node;
 
+import com.google.protobuf.ByteString;
 import com.google.rpc.Code;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -23,9 +24,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static pt.up.fc.dcc.ssd.common.Pair.cast;
-import static pt.up.fc.dcc.ssd.common.Serializable.toObject;
 import static pt.up.fc.dcc.ssd.common.Utils.isNotNull;
 import static pt.up.fc.dcc.ssd.common.Utils.isNull;
 import static pt.up.fc.dcc.ssd.p2p.Config.*;
@@ -425,6 +426,8 @@ public class KademliaNode {
                 )
             );
 
+            itemsRepo.put(key, data);
+
             return responses.stream().anyMatch(pair -> pair.first().equals(ACCEPTED));
         } catch (RoutingTableException e) {
             logger.warning(e.getMessage());
@@ -547,7 +550,7 @@ public class KademliaNode {
                 );
 
                 if (pair.first().equals(FOUND)) {
-                    return ((List<byte[]>) toObject(pair.second().getItems().toByteArray()));
+                    return pair.second().getItemsList().stream().map(ByteString::toByteArray).collect(Collectors.toList());
                 } else if (pair.first().equals(NOT_FOUND)) {
                     List<DistancedConnectionInfo> receivedInfos = fromGrpcConnectionInfo(pair
                         .second()

@@ -27,5 +27,19 @@ public class SellerItem implements Serializable {
         this.itemId = Id.idFromData(item.getBytes(StandardCharsets.UTF_8));
         this.sellerPbk = pbk;
     }
+
+    @Override
+    public String toString() {
+        return "SellerItem{" +
+            "topicName='" + topicName + '\'' +
+            ", topicId=" + topicId +
+            ", itemId=" + itemId +
+            ", itemName='" + itemName + '\'' +
+            ", SellerId=" + SellerId +
+            ", bid=" + bid +
+            ", serialVersionUID=" + serialVersionUID +
+            ", sellerPbk=" + sellerPbk +
+            '}';
+    }
 }
 

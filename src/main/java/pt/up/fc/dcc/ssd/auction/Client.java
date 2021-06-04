@@ -54,7 +54,7 @@ public class Client {
 
             // Wait for biding
             System.out.println("Waiting for bids....");
-            while(true){
+            while (true) {
             }
 
         } else {
@@ -64,11 +64,11 @@ public class Client {
             Id topicId = Id.idFromData(topic.getBytes(StandardCharsets.UTF_8));
 
             // Get items in the network through the topic Id
-            List<byte[]> itemsList =  clientNode.kademlia.findItems(
+            List<byte[]> itemsList = clientNode.kademlia.findItems(
                 topicId
             );
 
-            for (byte[] item: itemsList) {
+            for (byte[] item : itemsList) {
                 SellerItem sellerItem = (SellerItem) toObject(item);
                 System.out.println("Name: " + sellerItem.itemName + "\nCurrent bid: " + sellerItem.bid);
             }
@@ -80,30 +80,30 @@ public class Client {
             float bid = Float.parseFloat(scan.nextLine());
 
             // Find item and store it in clientNode
-            for (byte[] item: itemsList) {
+            for (byte[] item : itemsList) {
                 SellerItem sellerItem = (SellerItem) toObject(item);
-                if(sellerItem.itemName == chosenItemName){
+                if (sellerItem.itemName.equals(chosenItemName)) {
                     clientNode.item = sellerItem;
                     break;
                 }
             }
 
-            if(clientNode.item == null){
+            if (clientNode.item == null) {
                 throw new Exception("Chosen item didn't match any item in the list");
             }
 
-            boolean accepted  = clientNode.kademlia.bid(
-                    clientNode.item.SellerId,
-                    clientNode.item.itemId,
-                    bid
+            boolean accepted = clientNode.kademlia.bid(
+                clientNode.item.SellerId,
+                clientNode.item.itemId,
+                bid
             );
 
-            if(accepted){
+            if (accepted) {
                 Transaction transaction = new Transaction(
-                        clientNode.pbk,
-                        clientNode.item.sellerPbk,
-                        bid,
-                        null
+                    clientNode.pbk,
+                    clientNode.item.sellerPbk,
+                    bid,
+                    null
                 );
 
                 transaction.processTransaction();

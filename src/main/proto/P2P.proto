@@ -108,7 +108,7 @@ message FindValueResponse {
 
 message FindItemsResponse {
   Status status = 1;
-  bytes items = 2;
+  repeated bytes items = 2;
   repeated GrpcConnectionInfo connectionInfos = 3;
 }
 
