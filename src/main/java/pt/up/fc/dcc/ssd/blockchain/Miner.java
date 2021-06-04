@@ -1,6 +1,7 @@
 package pt.up.fc.dcc.ssd.blockchain;
 
 import pt.up.fc.dcc.ssd.auction.Client;
+import pt.up.fc.dcc.ssd.auction.ClientNode;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
 import java.util.logging.Logger;
@@ -24,10 +25,10 @@ public class Miner {
                         toByteArray(minerNode.blockchain)
                         );
                 minerNode.blockchainRepo.put(new Id(), toByteArray(minerNode.blockchain) );
-                minerNode.Mine();
+                // TODO: minerNode.Mine();
             }
         }else{
-            // TODO: find blockchain
+            // TODO: find blockchain through bootstrap
         }
 
     }

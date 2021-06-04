@@ -1,9 +1,12 @@
 package pt.up.fc.dcc.ssd.blockchain;
 
+import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 
 import javax.net.ssl.SSLException;
 import java.security.*;
+
+import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 
 public class MinerNode {
     public KademliaNode kademlia;
@@ -19,9 +22,24 @@ public class MinerNode {
             .build();
     }
 
-    public void Mine(){
-        System.out.println("Waiting for bid to occur... ");
-        // TODO:
+    public void Mine(Transaction transaction){
+        System.out.println("Waiting for transaction to occur... ");
+        Block prev = blockchain.latestBlock();
+        Block newBlock = new Block(
+                prev.index,
+            System.currentTimeMillis(),
+            prev.previousHash,
+            "???" // TODO: what's data?
+        );
+
+        newBlock.addTransaction(transaction);
+        blockchain.addBlock(newBlock);
+
+        // TODO: é assim?
+        kademlia.store(
+            new Id(), // TODO: ID??
+            toByteArray(blockchain)
+        );
     }
 
 }
