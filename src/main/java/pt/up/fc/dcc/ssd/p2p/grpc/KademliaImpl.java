@@ -78,8 +78,6 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
             response.setStatus(FAILED);
         }
 
-        // TODO: check type and store in blockchain?
-
         responseObserver.onNext(response.build());
         responseObserver.onCompleted();
     }

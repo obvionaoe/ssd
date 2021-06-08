@@ -25,8 +25,6 @@ import static pt.up.fc.dcc.ssd.p2p.grpc.Status.ACCEPTED;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.FAILED;
 import static pt.up.fc.dcc.ssd.p2p.security.Ssl.loadClientTlsCredentials;
 
-//TODO: add comments
-
 /**
  * Object that creates a request and calls an RPC
  */
@@ -74,6 +72,13 @@ public class RpcCall {
         return this;
     }
 
+    /**
+     * Adds a Data object to the Builder
+     *
+     * @param key the Id of the data
+     * @param value the byte[] with the data
+     * @return this Builder
+     */
     public RpcCall withData(Id key, byte[] value) {
         data = Data
             .newBuilder()
@@ -84,6 +89,12 @@ public class RpcCall {
         return this;
     }
 
+    /**
+     * Adds a Data object to the Builder
+     *
+     * @param value the byte[] with the data
+     * @return this Builder
+     */
     public RpcCall withData(byte[] value) {
         data = Data
             .newBuilder()
