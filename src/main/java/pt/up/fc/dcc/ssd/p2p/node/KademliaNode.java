@@ -67,7 +67,7 @@ public class KademliaNode {
         routingTable = new RoutingTable(id);
         this.transactionRepo = new TransactionRepo();
         this.itemsRepo = new ItemsRepo();
-        this.blockRepo = new BlockRepo(blockchain);
+        this.blockRepo = new BlockRepo(this);
         ServerBuilder<?> sb = NettyServerBuilder.forPort(port).sslContext(sslContext);
         sb.addService(new KademliaImpl(this));
         server = sb.build();
@@ -81,7 +81,7 @@ public class KademliaNode {
         routingTable = new RoutingTable(id);
         this.transactionRepo = new TransactionRepo();
         this.itemsRepo = new ItemsRepo();
-        this.blockRepo = new BlockRepo(blockchain);
+        this.blockRepo = new BlockRepo(this);
         ServerBuilder<?> sb = NettyServerBuilder.forPort(0).sslContext(sslContext);
         sb.addService(new KademliaImpl(this));
         server = sb.build();

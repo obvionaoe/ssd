@@ -27,6 +27,7 @@ public class Miner {
             minerNode.kademlia.bootstrap();
 
             while(true){
+                // Make the while true loop less intense
                 sleep(60000);
                 if(!minerNode.kademlia.getTransactionRepo().transactionsList.isEmpty()){
                     System.out.println("Received Transaction!!!");

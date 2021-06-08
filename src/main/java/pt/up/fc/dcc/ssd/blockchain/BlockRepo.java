@@ -12,10 +12,10 @@ import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 import static pt.up.fc.dcc.ssd.common.Serializable.toObject;
 
 public class BlockRepo implements Repository {
-    Blockchain kadBlockchain;
+    KademliaNode self;
 
-    public BlockRepo(Blockchain kadBlockchain){
-        this.kadBlockchain = kadBlockchain;
+    public BlockRepo(KademliaNode self){
+        this.self = self;
     }
     @Override
     public boolean containsKey(Id key) {
@@ -24,13 +24,13 @@ public class BlockRepo implements Repository {
 
     @Override
     public byte[] get(Id key) {
-        return toByteArray(kadBlockchain);
+        return toByteArray(self.getBlockchain());
     }
 
     @Override
     public boolean put(Id key, byte[] byteArray) {
         Block newBlock = (Block) toObject(byteArray);
-        kadBlockchain.addBlock(newBlock);
+        self.getBlockchain().addBlock(newBlock);
         //isChainValid(self.getBlockchain());
         return false;
     }
