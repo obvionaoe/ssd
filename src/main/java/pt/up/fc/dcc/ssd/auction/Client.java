@@ -63,6 +63,8 @@ public class Client {
             System.out.println("Waiting for bids....");
             sleep(3_600_000);
 
+            System.out.println("You just got "+ clientNode.getBalance() + "!");
+
         } else {
             /*if (args[0].equals("GENESIS")) {
                 Block newBlock =

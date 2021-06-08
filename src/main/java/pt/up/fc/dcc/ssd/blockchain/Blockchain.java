@@ -3,6 +3,7 @@ package pt.up.fc.dcc.ssd.blockchain;
 import pt.up.fc.dcc.ssd.auction.ClientNode;
 import pt.up.fc.dcc.ssd.blockchain.transactions.Transaction;
 import pt.up.fc.dcc.ssd.blockchain.transactions.TransactionOutput;
+import pt.up.fc.dcc.ssd.p2p.grpc.DataType;
 
 import javax.net.ssl.SSLException;
 import java.io.Serializable;
@@ -12,6 +13,8 @@ import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 
 public class Blockchain implements Serializable {
 
@@ -39,6 +42,8 @@ public class Blockchain implements Serializable {
         genesisBlock.addTransaction(genesisTransaction);
 
         addBlock(genesisBlock);
+
+        genesis.kademlia.gossip(toByteArray(genesisBlock), DataType.BLOCK);
     }
 
     // For development and demonstration reasons we can give a buyer money from genesis

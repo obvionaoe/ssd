@@ -1,5 +1,5 @@
 package pt.up.fc.dcc.ssd.blockchain;
 
 public class Config {
-    public static final int DIFFICULTY = 3;
+    public static final int DIFFICULTY = 1;
 }

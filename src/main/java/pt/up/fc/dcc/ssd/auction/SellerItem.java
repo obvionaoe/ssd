@@ -18,7 +18,6 @@ public class SellerItem implements Serializable {
     public final long serialVersionUID = 1L;
     public PublicKey sellerPbk;
 
-    //TODO: Is the clientId really necessary?
     public SellerItem(Id clientId, String topic, float bid, String item, PublicKey pbk) {
         this.SellerId = clientId;
         this.topicName = topic;
