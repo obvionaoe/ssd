@@ -19,7 +19,7 @@ public class ClientNode {
     public KademliaNode kademlia;
     public SellerItem item;
     public ItemsRepo itemsRepo = new ItemsRepo();
-    public BlockchainRepo blockchainRepo;
+    public TransactionRepo blockchainRepo;
 
     // Wallet
     public PublicKey pbk;

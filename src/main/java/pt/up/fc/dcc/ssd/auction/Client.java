@@ -1,5 +1,6 @@
 package pt.up.fc.dcc.ssd.auction;
 
+import pt.up.fc.dcc.ssd.blockchain.Block;
 import pt.up.fc.dcc.ssd.blockchain.Blockchain;
 import pt.up.fc.dcc.ssd.blockchain.Transaction;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
@@ -60,7 +61,12 @@ public class Client {
             sleep(3_600_000);
 
         } else {
-            // TODO: List of topics
+            if( args[1].equals("GENESIS")) {
+               Block newBlock =
+                       clientNode.kademlia.getBlockchain().MakeGenesisBuyer(clientNode, clientNode.kademlia.getBlockchain());
+                clientNode.kademlia.gossip(new Id(), toByteArray(newBlock));
+            }
+
             System.out.println("From what topic do you want to buy?");
             String topic = scan.nextLine();
             Id topicId = Id.idFromData(topic.getBytes(StandardCharsets.UTF_8));

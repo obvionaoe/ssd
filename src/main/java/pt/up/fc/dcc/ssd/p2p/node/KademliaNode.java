@@ -99,7 +99,7 @@ public class KademliaNode {
     public void start() throws IOException {
         if (!started) {
             server.start();
-            connectionInfo = new ConnectionInfo(id, address, server.getPort(), null, null);
+            connectionInfo = new ConnectionInfo(id, address, server.getPort());
             started = true;
         } else {
             logger.warning("This node has already been started!");
@@ -162,6 +162,17 @@ public class KademliaNode {
     public Blockchain getBlockchain() {
         return blockchain;
     }
+    public void setBlockchain(Blockchain blockchain) {
+        this.blockchain = blockchain;
+    }
+
+    public void nodeIdRequest(){
+        // TODO: make node id
+
+        // TODO: make keypair
+
+        // TODO: send nodeid  + keypair -> CSR
+    }
 
     /**
      * Bootstraps this node using the standard address and port for the bootstrap node, which should already be running
@@ -184,6 +195,8 @@ public class KademliaNode {
      * @return true if the node was successfully bootstrapped, false otherwise
      */
     public boolean bootstrap(Id destinationId, String address, int port) {
+        // TODO: sign the thing
+
         ConnectionInfo destinationConnectionInfo = new ConnectionInfo(destinationId, address, port);
 
         routingTable.update(destinationId, destinationConnectionInfo);

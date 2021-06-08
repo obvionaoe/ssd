@@ -1,5 +1,7 @@
 package pt.up.fc.dcc.ssd.blockchain;
 
+import io.grpc.netty.shaded.io.netty.util.internal.StringUtil;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,11 +67,19 @@ public class Block {
         return builder.toString();
     }*/
 
+    // TODO: Tidy this
     public String calculateHash(Block block) {
+        return Utils.applySecureHash(block.previousHash
+            + Long.toString(block.timeStamp)
+            + Integer.toString(block.nonce)
+            + block.merkleRoot);
+    }
+
+    public String calculateHash(){
         return Utils.applySecureHash(previousHash
-            + Long.toString(timeStamp)
-            + Integer.toString(nonce)
-            + merkleRoot);
+                + Long.toString(timeStamp)
+                + Integer.toString(nonce)
+                + merkleRoot);
     }
 
     public String mineBlock(int difficulty) {

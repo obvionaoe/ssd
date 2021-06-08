@@ -4,6 +4,8 @@ import pt.up.fc.dcc.ssd.auction.Client;
 import pt.up.fc.dcc.ssd.auction.ClientNode;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
+import javax.net.ssl.SSLException;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Logger;
 
 import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
@@ -17,7 +19,7 @@ public class Miner {
 
         if (args.length > 0) {
             // TODO:
-            if (args[0] == "GENESIS") {
+            /*if (args[0] == "GENESIS") {
                 Blockchain blockchain = new Blockchain(0);
 
                 MinerNode minerNode = new MinerNode();
@@ -25,19 +27,31 @@ public class Miner {
                         new Id(), // TODO: ID??
                         toByteArray(minerNode.blockchain)
                         );
-                minerNode.blockchainRepo.put(new Id(), toByteArray(minerNode.blockchain) );
+                minerNode.transactionRepo.put(new Id(), toByteArray(minerNode.blockchain) );
                 // TODO: minerNode.Mine();
-            }
+            }*/
         }else{
-            // TODO: find blockchain through bootstrap
-            MinerNode minerNode = new MinerNode();
+        MinerNode minerNode = null;
+        try {
+            minerNode = new MinerNode();
+        } catch (SSLException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
 
-            minerNode.kademlia.start();
+        minerNode.kademlia.start();
             minerNode.kademlia.bootstrap();
 
             while(true){
                 System.out.println("Waiting for transaction to occur");
-
+                if(!minerNode.transactionRepo.transactionsList.isEmpty()){
+                    System.out.println("Received Transaction!!!");
+                    Transaction newTransaction = minerNode.transactionRepo.transactionsList.get(0);
+                    minerNode.transactionRepo.transactionsList.remove(0);
+                    System.out.println("Time to mine it!");
+                    minerNode.Mine(newTransaction);
+                }
             }
         }
 
