@@ -81,7 +81,7 @@ public class Blockchain {
         return blockchain.get(blockchain.size() - 1);
     }
 
-    // TODO: use
+    // TODO: use this
     public boolean isValidNewBlock(Block newBlock, Block previousBlock) {
         Block currentBlock;
         String hashTarget = new String(new char[difficulty]).replace('\0', '0');

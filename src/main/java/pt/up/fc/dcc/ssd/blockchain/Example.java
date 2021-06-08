@@ -21,7 +21,7 @@ public class Example {
         ClientNode genesis = new ClientNode("Genesis");
 
         // GENESIS
-        Transaction genesisTransaction = new Transaction(genesis.pbk, genesis.pbk, 100f, null);
+        Transaction genesisTransaction = new Transaction(genesis.pbk, buyer.pbk, 100f, null);
         genesisTransaction.generateSignature(genesis.pvk);
         genesisTransaction.transactionId = "0"; //manually set the transaction id
         genesisTransaction.outputs.add(new TransactionOutput(genesisTransaction.recipient, genesisTransaction.value, genesisTransaction.transactionId)); //manually add the Transactions Output
@@ -41,13 +41,13 @@ public class Example {
                 System.currentTimeMillis(),
                 genesisBlock.hash,
                 new ArrayList<>());
-        System.out.println("\nGenesis's balance is: " + genesis.getBalance(blockchain));
+        System.out.println("\nBuyer's balance is: " + buyer.getBalance());
 
 
         System.out.println("\nbuyer is Attempting to send funds (40) to seller...");
-        block1.addTransaction(buyer.sendFunds(seller.pbk, 40f, blockchain));
+        block1.addTransaction(buyer.sendFunds(seller.pbk, 40f));
         blockchain.addBlock(block1);
-        System.out.println("\nbuyer's balance is: " + buyer.getBalance(blockchain));
-        System.out.println("seller's balance is: " + seller.getBalance(blockchain));
+        System.out.println("\nbuyer's balance is: " + buyer.getBalance());
+        System.out.println("seller's balance is: " + seller.getBalance());
     }
 }

@@ -118,7 +118,7 @@ public class KademliaNode {
                 }
                 System.err.println("NODE[STATUS]: SHUT DOWN");
             }));
-            server.awaitTermination();
+            //server.awaitTermination();
         } else {
             logger.warning("This node has already been started!");
         }

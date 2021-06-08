@@ -1,11 +1,13 @@
 package pt.up.fc.dcc.ssd.auction;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import pt.up.fc.dcc.ssd.blockchain.Block;
 import pt.up.fc.dcc.ssd.blockchain.Blockchain;
 import pt.up.fc.dcc.ssd.blockchain.transactions.Transaction;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
 import java.nio.charset.StandardCharsets;
+import java.security.Security;
 import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Logger;
@@ -21,8 +23,9 @@ public class Client {
     private static ClientNode clientNode;
 
     // TODO: Auction in loop
-// TODO: Exceptions handling
+    // TODO: Exceptions handling
     public static void main(String[] args) throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
 
         // Get Role
         System.out.println("Buyer or Seller?");
@@ -110,11 +113,10 @@ public class Client {
             );
 
             if (accepted) {
-                Blockchain buyerBlockchain = clientNode.kademlia.getBlockchain();
-                System.out.println("\nBuyer's balance is: " + clientNode.getBalance(buyerBlockchain));
-                System.out.println("\nBuyer is Attempting to send funds (40) to Seller...");
+                System.out.println("\nBuyer's balance is: " + clientNode.getBalance());
+                System.out.println("\nBuyer is Attempting to send funds" + bid + " to Seller...");
 
-                Transaction transaction = clientNode.sendFunds(clientNode.item.sellerPbk, bid, buyerBlockchain);
+                Transaction transaction = clientNode.sendFunds(clientNode.item.sellerPbk, bid);
 
                 // Gossip da transação
                 clientNode.kademlia.gossip(

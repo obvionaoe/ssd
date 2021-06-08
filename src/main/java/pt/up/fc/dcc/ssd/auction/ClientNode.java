@@ -30,7 +30,7 @@ public class ClientNode {
 
 
     public ClientNode(String role) throws SSLException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        // TODO:
+        // TODO: This is now in getRequest in kademlia
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("ECDSA","BC");
         SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
         ECGenParameterSpec ecSpec = new ECGenParameterSpec("prime192v1");
@@ -52,10 +52,9 @@ public class ClientNode {
         itemsRepo.put(this.item.topicId, toByteArray(this.item));
     }
 
-    // TODO: blockchain dependency injection for testing purposes,
-    //  don't forget to see if it's good practice
-    //returns balance and stores the UTXO's owned by this wallet in this.UTXOs
-    public float getBalance(Blockchain blockchain) {
+    //returns balance and stores the UTXO's owned by this client in this.UTXOs
+    public float getBalance() {
+        Blockchain blockchain = kademlia.getBlockchain();
         float total = 0;
         //Blockchain blockchain = (Blockchain) toObject(blockchainRepo.get( ? ??));
         for (Map.Entry<String, TransactionOutput> item : blockchain.UTXOs.entrySet()) {
@@ -69,8 +68,8 @@ public class ClientNode {
     }
 
     //Generates and returns a new transaction from this wallet.
-    public Transaction sendFunds(PublicKey _recipient, float value, Blockchain blockchain ) {
-        if(getBalance(blockchain) < value) { //gather balance and check funds.
+    public Transaction sendFunds(PublicKey _recipient, float value ) {
+        if(getBalance() < value) { //gather balance and check funds.
             System.out.println("#Not Enough funds to send transaction. Transaction Discarded.");
             return null;
         }
