@@ -66,16 +66,12 @@ public class Client {
             System.out.println("You just got "+ clientNode.getBalance() + "!");
 
         } else {
-            /*if (args[0].equals("GENESIS")) {
+            if (args[0].equals("GENESIS")) {
                 Block newBlock =
                     clientNode.kademlia.getBlockchain().MakeGenesisBuyer(clientNode, clientNode.kademlia.getBlockchain());
-                clientNode.kademlia.gossip(new Id(), toByteArray(newBlock), BLOCK);
-            }*/
+                clientNode.kademlia.gossip(toByteArray(newBlock), BLOCK);
+            }
 
-            Block newBlock =
-                    clientNode.kademlia.getBlockchain().MakeGenesisBuyer(clientNode, clientNode.kademlia.getBlockchain());
-
-            clientNode.kademlia.gossip(toByteArray(newBlock), BLOCK);
             System.out.println("\nYour balance: " + clientNode.getBalance());
 
             System.out.println("From what topic do you want to buy?");
