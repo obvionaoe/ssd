@@ -52,21 +52,21 @@ test {
 
 startScripts.enabled = false
 
-task brokerServer(type: CreateStartScripts) {
+task minerNode(type: CreateStartScripts) {
     mainClassName = 'pt.up.fc.dcc.ssd.blockchain.Miner'
     applicationName = 'miner-node'
     outputDir = new File(project.buildDir, 'tmp')
     classpath = startScripts.classpath
 }
 
-task subscriberClient(type: CreateStartScripts) {
+task clientNode(type: CreateStartScripts) {
     mainClassName = 'pt.up.fc.dcc.ssd.auction.Client'
     applicationName = 'client-node'
     outputDir = new File(project.buildDir, 'tmp')
     classpath = startScripts.classpath
 }
 
-task publisherClient(type: CreateStartScripts) {
+task bootstrapNode(type: CreateStartScripts) {
     mainClassName = 'pt.up.fc.dcc.ssd.p2p.Bootstrap'
     applicationName = 'bootstrap-node'
     outputDir = new File(project.buildDir, 'tmp')
@@ -74,8 +74,8 @@ task publisherClient(type: CreateStartScripts) {
 }
 
 applicationDistribution.into('bin') {
-    from(brokerServer)
-    from(subscriberClient)
-    from(publisherClient)
+    from(bootstrapNode)
+    from(clientNode)
+    from(minerNode)
     fileMode = 0755
 }
