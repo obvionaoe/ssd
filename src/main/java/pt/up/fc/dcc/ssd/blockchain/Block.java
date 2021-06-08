@@ -104,7 +104,7 @@ public class Block implements Serializable {
             }
         }
         transactions.add(transaction);
-        System.out.println("Transaction Successfully added to Block");
+        //System.out.println("Transaction Successfully added to Block");
         return true;
     }
 

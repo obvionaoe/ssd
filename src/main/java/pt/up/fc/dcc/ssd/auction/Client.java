@@ -52,7 +52,6 @@ public class Client {
                 topic,
                 bid,
                 item);
-            System.out.println(clientNode.item.topicId);
             // Add item associated with topic Id to the network
             clientNode.kademlia.store(
                 clientNode.item.topicId,
@@ -66,7 +65,7 @@ public class Client {
             System.out.println("You just got "+ clientNode.getBalance() + "!");
 
         } else {
-            if (args[0].equals("GENESIS")) {
+            if (args.length == 1 && args[0].equals("GENESIS")) {
                 Block newBlock =
                     clientNode.kademlia.getBlockchain().MakeGenesisBuyer(clientNode, clientNode.kademlia.getBlockchain());
                 clientNode.kademlia.gossip(toByteArray(newBlock), BLOCK);
