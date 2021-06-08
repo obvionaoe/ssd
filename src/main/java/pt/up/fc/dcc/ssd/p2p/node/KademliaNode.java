@@ -103,22 +103,21 @@ public class KademliaNode {
      *
      * @throws IOException if there's a problem while starting this node
      */
-    public void start() throws IOException, InterruptedException {
+    public void start() throws IOException {
         if (!started) {
             server.start();
             connectionInfo = new ConnectionInfo(id, address, server.getPort());
             started = true;
             // makes the server wait for the JVM shutdown to quit, in most cases (Ctrl+C)
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                System.err.println("NODE[STATUS]: SHUTTING DOWN...");
+                System.err.println("NODE[" + id + "]: SHUTTING DOWN...");
                 try {
                     this.stop();
                 } catch (InterruptedException e) {
                     e.printStackTrace(System.err);
                 }
-                System.err.println("NODE[STATUS]: SHUT DOWN");
+                System.err.println("NODE[" + id + "]: SHUT DOWN");
             }));
-            //server.awaitTermination();
         } else {
             logger.warning("This node has already been started!");
         }
@@ -279,7 +278,6 @@ public class KademliaNode {
      * @return true if the pinged node is alive, false otherwise
      */
     public boolean ping(Id destinationId) {
-        // TODO: clean up code
         // the destination node should always be in the routing table,
         // so it will automatically be the closest node as distance(closest, dest) = 0
         // that means it will be the first node in our sorted list of connection information
@@ -547,17 +545,21 @@ public class KademliaNode {
                         info.getId().equals(visitedId)
                     )
                 );
+            } else {
+                visitedNodeIds = new ArrayList<>();
+                visitedNodeIds.add(id);
             }
 
             List<Pair<Status, GossipResponse>> responses = new ArrayList<>();
 
+            List<Id> finalVisitedNodeIds = visitedNodeIds;
             allConnectionInfos.forEach(destinationInfo ->
                 responses.add(cast(rpc(this)
                         .withDestConnInfo(destinationInfo)
                         .type(GOSSIP)
                         .withData(data)
                         .withDataType(dataType)
-                        .withVisitedIds(visitedNodeIds)
+                        .withVisitedIds(finalVisitedNodeIds)
                         .call(),
                     Status.class,
                     GossipResponse.class
