@@ -28,6 +28,7 @@ public class ClientNode {
 
 
     public ClientNode(String role) throws SSLException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        // TODO:
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("ECDSA","BC");
         SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
         ECGenParameterSpec ecSpec = new ECGenParameterSpec("prime192v1");

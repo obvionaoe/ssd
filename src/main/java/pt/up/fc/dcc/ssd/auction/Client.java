@@ -1,5 +1,6 @@
 package pt.up.fc.dcc.ssd.auction;
 
+import pt.up.fc.dcc.ssd.blockchain.Blockchain;
 import pt.up.fc.dcc.ssd.blockchain.Transaction;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
@@ -100,14 +101,17 @@ public class Client {
             );
 
             if (accepted) {
-                // TODO:
-                //System.out.println("\nBuyer's balance is: " + clientNode.getBalance());
+                Blockchain buyerBlockchain = clientNode.kademlia.getBlockchain();
+                System.out.println("\nBuyer's balance is: " + clientNode.getBalance(buyerBlockchain));
                 System.out.println("\nBuyer is Attempting to send funds (40) to Seller...");
-                //Transaction transaction = clientNode.sendFunds(clientNode.item.sellerPbk, bid);
 
-                // TODO: Gossip da transação
+                Transaction transaction = clientNode.sendFunds(clientNode.item.sellerPbk, bid, buyerBlockchain);
 
-                //transaction.processTransaction();
+                // Gossip da transação
+                clientNode.kademlia.gossip(
+                        new Id(),
+                        toByteArray(transaction)
+                );
             }
         }
     }

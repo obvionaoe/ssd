@@ -12,11 +12,10 @@ import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 public class MinerNode {
     public KademliaNode kademlia;
     public Blockchain blockchain;
-    public BlockchainRepo blockchainRepo;
+    public TransactionRepo transactionRepo;
 
-    public MinerNode(Blockchain blockchain ) throws SSLException, NoSuchAlgorithmException {
-        this.blockchain = blockchain;
-        blockchainRepo = new BlockchainRepo();
+    public MinerNode() throws SSLException, NoSuchAlgorithmException {
+        transactionRepo = new TransactionRepo();
 
         kademlia = KademliaNode
             .newBuilder()
@@ -24,7 +23,6 @@ public class MinerNode {
     }
 
     public void Mine(Transaction transaction){
-        System.out.println("Waiting for transaction to occur... ");
         Block prev = blockchain.latestBlock();
 
         Block newBlock = new Block(

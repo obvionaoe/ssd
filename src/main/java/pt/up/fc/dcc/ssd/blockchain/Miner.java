@@ -16,10 +16,11 @@ public class Miner {
     public static void main(String[] args) throws Exception {
 
         if (args.length > 0) {
+            // TODO:
             if (args[0] == "GENESIS") {
                 Blockchain blockchain = new Blockchain(0);
 
-                MinerNode minerNode = new MinerNode(blockchain);
+                MinerNode minerNode = new MinerNode();
                 minerNode.kademlia.store(
                         new Id(), // TODO: ID??
                         toByteArray(minerNode.blockchain)
@@ -29,6 +30,15 @@ public class Miner {
             }
         }else{
             // TODO: find blockchain through bootstrap
+            MinerNode minerNode = new MinerNode();
+
+            minerNode.kademlia.start();
+            minerNode.kademlia.bootstrap();
+
+            while(true){
+                System.out.println("Waiting for transaction to occur");
+
+            }
         }
 
     }

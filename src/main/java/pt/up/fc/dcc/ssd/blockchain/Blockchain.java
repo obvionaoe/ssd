@@ -1,5 +1,11 @@
 package pt.up.fc.dcc.ssd.blockchain;
 
+import pt.up.fc.dcc.ssd.auction.ClientNode;
+
+import javax.net.ssl.SSLException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,15 +18,41 @@ public class Blockchain {
     public static final float minimumTransaction = 0.1f;
     public static Map<String, TransactionOutput> UTXOs = new HashMap<String, TransactionOutput>();
     public static Transaction genesisTransaction;
+    ClientNode genesis = new ClientNode("Genesis");
 
-    public Blockchain(int difficulty) {
+    public Blockchain(int difficulty) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchProviderException, SSLException {
         this.difficulty = difficulty;
         blockchain = new ArrayList<>();
 
-        // TODO: Genesis deve ser feito à parte
-        //Block genesis = new Block(0, System.currentTimeMillis(), null, new ArrayList<>());
-        //genesis.mineBlock(difficulty);
-        //blockchain.add(genesis);
+        // TODO: figure this
+        Transaction genesisTransaction = new Transaction(genesis.pbk, buyerGenesis.pbk, 100f, null);
+        genesisTransaction.generateSignature(genesis.pvk);
+        genesisTransaction.transactionId = "0";
+        genesisTransaction.outputs.add(new TransactionOutput(genesisTransaction.recipient, genesisTransaction.value, genesisTransaction.transactionId));
+
+        UTXOs.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
+
+        System.out.println("Creating and Mining Genesis block... ");
+        Block genesisBlock = new Block(0, System.currentTimeMillis(), "0", new ArrayList<>());
+        genesisBlock.addTransaction(genesisTransaction);
+
+        addBlock(genesisBlock);
+    }
+
+    // For development and demonstration reasons we can give a buyer money from genesis
+    public void MakeGenesisBuyer(ClientNode buyerGenesis){
+        Transaction genesisTransaction = new Transaction(genesis.pbk, buyerGenesis.pbk, 100f, null);
+        genesisTransaction.generateSignature(genesis.pvk);
+        genesisTransaction.transactionId = "0";
+        genesisTransaction.outputs.add(new TransactionOutput(genesisTransaction.recipient, genesisTransaction.value, genesisTransaction.transactionId));
+
+        UTXOs.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
+
+        System.out.println("Creating and Mining Genesis block... ");
+        Block genesisBlock = new Block(0, System.currentTimeMillis(), "0", new ArrayList<>());
+        genesisBlock.addTransaction(genesisTransaction);
+
+        addBlock(genesisBlock);
     }
 
 
@@ -44,27 +76,7 @@ public class Blockchain {
         return blockchain.get(blockchain.size() - 1);
     }
 
-    /*
-     //Validate genesis block -> um quitos inútil
-    public boolean isGenesisValid() {
-        Block Genesis = blockchain.get(0);
 
-        if (Genesis.getIndex() != 0) {
-            return false;
-        }
-
-        if (Genesis.getPreviousHash() != null) {
-            return false;
-        }
-
-        if (Genesis.getHash() == null ||
-                !Block.calculateHash(Genesis).equals(Genesis.getHash())) {
-            return false;
-        }
-
-        return true;
-    }
-    */
 
 
 //usa POW
@@ -91,26 +103,6 @@ public class Blockchain {
     }*/
 
 
-    //prof disse que não era preciso
-    /*
-    public boolean isBlockChainValid() {
-        if (!isGenesisValid()) {
-            return false;
-        }
-
-        for (int i = 1; i < blockchain.size(); i++) {
-            Block currentBlock = blockchain.get(i);
-            Block previousBlock = blockchain.get(i - 1);
-
-            if (!isValidNewBlock(currentBlock, previousBlock)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-     */
 
     public String toString() {
         StringBuilder builder = new StringBuilder();
