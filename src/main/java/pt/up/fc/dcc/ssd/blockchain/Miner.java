@@ -17,20 +17,6 @@ public class Miner {
 
     public static void main(String[] args) throws Exception {
 
-        if (args.length > 0) {
-            // TODO:
-            /*if (args[0] == "GENESIS") {
-                Blockchain blockchain = new Blockchain(0);
-
-                MinerNode minerNode = new MinerNode();
-                minerNode.kademlia.store(
-                        new Id(), // TODO: ID??
-                        toByteArray(minerNode.blockchain)
-                        );
-                minerNode.transactionRepo.put(new Id(), toByteArray(minerNode.blockchain) );
-                // TODO: minerNode.Mine();
-            }*/
-        }else{
         MinerNode minerNode = null;
         try {
             minerNode = new MinerNode();
@@ -53,8 +39,5 @@ public class Miner {
                     minerNode.Mine(newTransaction);
                 }
             }
-        }
-
     }
-
 }
