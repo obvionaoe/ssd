@@ -2,9 +2,10 @@ package pt.up.fc.dcc.ssd.blockchain.transactions;
 
 import pt.up.fc.dcc.ssd.blockchain.Utils;
 
+import java.io.Serializable;
 import java.security.PublicKey;
 
-public class TransactionOutput {
+public class TransactionOutput implements Serializable {
     public String id;
     public PublicKey recipient; // new owner of coins
     public float value; //amount of owned coins

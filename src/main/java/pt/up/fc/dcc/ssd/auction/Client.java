@@ -26,7 +26,6 @@ public class Client {
     // TODO: Exceptions handling
     public static void main(String[] args) throws Exception {
         Security.addProvider(new BouncyCastleProvider());
-
         // Get Role
         System.out.println("Buyer or Seller?");
         Scanner scan = new Scanner(System.in);
@@ -67,11 +66,17 @@ public class Client {
             sleep(3_600_000);
 
         } else {
-            if (args[0].equals("GENESIS")) {
+            /*if (args[0].equals("GENESIS")) {
                 Block newBlock =
                     clientNode.kademlia.getBlockchain().MakeGenesisBuyer(clientNode, clientNode.kademlia.getBlockchain());
                 clientNode.kademlia.gossip(new Id(), toByteArray(newBlock), BLOCK);
-            }
+            }*/
+
+            Block newBlock =
+                    clientNode.kademlia.getBlockchain().MakeGenesisBuyer(clientNode, clientNode.kademlia.getBlockchain());
+
+            clientNode.kademlia.gossip(new Id(), toByteArray(newBlock), BLOCK);
+            System.out.println("\nYour balance: " + clientNode.getBalance());
 
             System.out.println("From what topic do you want to buy?");
             String topic = scan.nextLine();
@@ -113,7 +118,6 @@ public class Client {
             );
 
             if (accepted) {
-                System.out.println("\nBuyer's balance is: " + clientNode.getBalance());
                 System.out.println("\nBuyer is Attempting to send funds" + bid + " to Seller...");
 
                 Transaction transaction = clientNode.sendFunds(clientNode.item.sellerPbk, bid);

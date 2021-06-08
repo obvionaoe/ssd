@@ -3,12 +3,13 @@ package pt.up.fc.dcc.ssd.blockchain.transactions;
 import pt.up.fc.dcc.ssd.blockchain.Blockchain;
 import pt.up.fc.dcc.ssd.blockchain.Utils;
 
+import java.io.Serializable;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Transaction {
+public class Transaction implements Serializable {
 
     public String transactionId; //Contains a hash of transaction
     public PublicKey sender; //Senders address/public key.

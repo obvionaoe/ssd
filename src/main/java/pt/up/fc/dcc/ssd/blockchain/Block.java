@@ -2,10 +2,11 @@ package pt.up.fc.dcc.ssd.blockchain;
 
 import pt.up.fc.dcc.ssd.blockchain.transactions.Transaction;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Block {
+public class Block implements Serializable {
 
     public int index;
     public long timeStamp;

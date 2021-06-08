@@ -1,5 +1,6 @@
 package pt.up.fc.dcc.ssd.auction;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import pt.up.fc.dcc.ssd.blockchain.Blockchain;
 import pt.up.fc.dcc.ssd.blockchain.transactions.Transaction;
 import pt.up.fc.dcc.ssd.blockchain.transactions.TransactionInput;
@@ -31,6 +32,7 @@ public class ClientNode {
 
     public ClientNode(String role) throws SSLException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         // TODO: This is now in getRequest in kademlia
+        Security.addProvider(new BouncyCastleProvider());
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("ECDSA","BC");
         SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
         ECGenParameterSpec ecSpec = new ECGenParameterSpec("prime192v1");
