@@ -5,6 +5,7 @@ import pt.up.fc.dcc.ssd.blockchain.transactions.Transaction;
 import pt.up.fc.dcc.ssd.blockchain.transactions.TransactionOutput;
 
 import javax.net.ssl.SSLException;
+import java.io.Serializable;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -12,13 +13,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Blockchain {
+public class Blockchain implements Serializable {
 
     public ArrayList<Block> blockchain = new ArrayList<Block>();
     public int difficulty = 1;
 
     public static final float minimumTransaction = 0.1f;
-    public static Map<String, TransactionOutput> UTXOs = new HashMap<>();
+    public static Map<String, TransactionOutput> UnspentTransactions = new HashMap<String, TransactionOutput>();
     public static Transaction genesisTransaction;
     ClientNode genesis = new ClientNode("Genesis");
 
@@ -31,7 +32,7 @@ public class Blockchain {
         genesisTransaction.transactionId = "0";
         genesisTransaction.outputs.add(new TransactionOutput(genesisTransaction.recipient, genesisTransaction.value, genesisTransaction.transactionId));
 
-        UTXOs.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
+        UnspentTransactions.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
 
         System.out.println("Creating and Mining Genesis block... ");
         Block genesisBlock = new Block(0, System.currentTimeMillis(), "0", new ArrayList<>());
@@ -47,7 +48,7 @@ public class Blockchain {
         genesisTransaction.transactionId = "0";
         genesisTransaction.outputs.add(new TransactionOutput(genesisTransaction.recipient, genesisTransaction.value, genesisTransaction.transactionId));
 
-        UTXOs.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
+        UnspentTransactions.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
 
         System.out.println("Giving 100.0 to genesis buyer ;) ");
         Block prev = prevBlockchain.latestBlock();

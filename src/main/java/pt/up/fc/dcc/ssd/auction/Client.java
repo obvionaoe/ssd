@@ -75,7 +75,7 @@ public class Client {
             Block newBlock =
                     clientNode.kademlia.getBlockchain().MakeGenesisBuyer(clientNode, clientNode.kademlia.getBlockchain());
 
-            clientNode.kademlia.gossip(new Id(), toByteArray(newBlock), BLOCK);
+            clientNode.kademlia.gossip(toByteArray(newBlock), BLOCK);
             System.out.println("\nYour balance: " + clientNode.getBalance());
 
             System.out.println("From what topic do you want to buy?");
@@ -118,13 +118,12 @@ public class Client {
             );
 
             if (accepted) {
-                System.out.println("\nBuyer is Attempting to send funds" + bid + " to Seller...");
+                System.out.println("\nBuyer is to send funds" + bid + " to Seller...");
 
                 Transaction transaction = clientNode.sendFunds(clientNode.item.sellerPbk, bid);
 
                 // Gossip da transação
                 clientNode.kademlia.gossip(
-                    new Id(),
                     toByteArray(transaction),
                     TRANSACTION
                 );

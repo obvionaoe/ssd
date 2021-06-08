@@ -3,12 +3,13 @@ package pt.up.fc.dcc.ssd.auction;
 import pt.up.fc.dcc.ssd.common.Repository;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
-public class ItemsRepo implements Repository {
+public class ItemsRepo implements Repository, Serializable {
     Scanner scan = new Scanner(System.in);
     HashMap<Id, List<byte[]>> repo = new HashMap<>();
 
