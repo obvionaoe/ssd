@@ -10,7 +10,7 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.stub.StreamObserver;
 import pt.up.fc.dcc.ssd.auction.ItemsRepo;
 import pt.up.fc.dcc.ssd.blockchain.Blockchain;
-import pt.up.fc.dcc.ssd.blockchain.BlockchainRepo;
+import pt.up.fc.dcc.ssd.blockchain.TransactionRepo;
 import pt.up.fc.dcc.ssd.common.Pair;
 import pt.up.fc.dcc.ssd.p2p.Config;
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
@@ -21,7 +21,9 @@ import pt.up.fc.dcc.ssd.p2p.routing.exceptions.RoutingTableException;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
-import java.math.BigInteger;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +51,7 @@ public class KademliaNode {
     private ConnectionInfo connectionInfo;
     private final Server server;
     public final RoutingTable routingTable;
-    private final BlockchainRepo blockchainRepo;
+    private final TransactionRepo transactionRepo;
     private final ItemsRepo itemsRepo;
     private Blockchain blockchain;
     private boolean started;
@@ -58,7 +60,7 @@ public class KademliaNode {
         this.id = id;
         this.address = address;
         routingTable = new RoutingTable(id);
-        this.blockchainRepo = new BlockchainRepo();
+        this.transactionRepo = new TransactionRepo();
         this.itemsRepo = new ItemsRepo();
         ServerBuilder<?> sb = NettyServerBuilder.forPort(port).sslContext(sslContext);
         sb.addService(new KademliaImpl(this));
@@ -71,7 +73,7 @@ public class KademliaNode {
         this.id = id;
         this.address = address;
         routingTable = new RoutingTable(id);
-        this.blockchainRepo = new BlockchainRepo();
+        this.transactionRepo = new TransactionRepo();
         this.itemsRepo = new ItemsRepo();
         ServerBuilder<?> sb = NettyServerBuilder.forPort(0).sslContext(sslContext);
         sb.addService(new KademliaImpl(this));
@@ -97,7 +99,7 @@ public class KademliaNode {
     public void start() throws IOException {
         if (!started) {
             server.start();
-            connectionInfo = new ConnectionInfo(id, address, server.getPort(), null, null);
+            connectionInfo = new ConnectionInfo(id, address, server.getPort());
             started = true;
         } else {
             logger.warning("This node has already been started!");
@@ -149,8 +151,8 @@ public class KademliaNode {
         return routingTable;
     }
 
-    public BlockchainRepo getBlockchainRepo() {
-        return blockchainRepo;
+    public TransactionRepo getTransactionRepo() {
+        return transactionRepo;
     }
 
     public ItemsRepo getItemsRepo() {
@@ -159,6 +161,17 @@ public class KademliaNode {
 
     public Blockchain getBlockchain() {
         return blockchain;
+    }
+    public void setBlockchain(Blockchain blockchain) {
+        this.blockchain = blockchain;
+    }
+
+    public void nodeIdRequest(){
+        // TODO: make node id
+
+        // TODO: make keypair
+
+        // TODO: send nodeid  + keypair -> CSR
     }
 
     /**
@@ -169,6 +182,7 @@ public class KademliaNode {
     public boolean bootstrap() {
         return bootstrap(BOOTSTRAP_NODE_ID, BOOTSTRAP_NODE_ADDR, BOOTSTRAP_NODE_PORT);
     }
+
 
     /**
      * Bootstraps this node using the provided address and port
@@ -182,6 +196,8 @@ public class KademliaNode {
      * @return true if the node was successfully bootstrapped, false otherwise
      */
     public boolean bootstrap(Id destinationId, String address, int port) {
+        // TODO: sign the thing
+
         ConnectionInfo destinationConnectionInfo = new ConnectionInfo(destinationId, address, port);
 
         routingTable.update(destinationId, destinationConnectionInfo);
@@ -214,6 +230,18 @@ public class KademliaNode {
                 logger.warning(e.getMessage() + e.getStatus().getCode());
             }
 
+            return false;
+        } catch (SSLException e) {
+            e.printStackTrace();
+            return false;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return false;
+        } catch (InvalidAlgorithmParameterException e) {
+            e.printStackTrace();
+            return false;
+        } catch (NoSuchProviderException e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -604,7 +632,7 @@ public class KademliaNode {
      * @param nodeConnInfo the DistancedConnectionInfo of the node for which to calculate the newDistance
      * @return the newDistance
      */
-    private static BigInteger newDistance(DistancedConnectionInfo nodeConnInfo) {
+    /*private static BigInteger newDistance(DistancedConnectionInfo nodeConnInfo) {
         return nodeConnInfo.getDistance()
             .multiply(BALANCING_FACTOR)
             .add(BigInteger.ONE
@@ -613,7 +641,7 @@ public class KademliaNode {
                     .divide(nodeConnInfo.getTrust())
                 )
             );
-    }
+    }*/
 
     /**
      * Builder object to help with KademliaNode object construction
@@ -623,7 +651,7 @@ public class KademliaNode {
         private Integer port = 0;
         private String address = "localhost";
         private NodeType type = NODE;
-        private BlockchainRepo blockchain;
+        private TransactionRepo transactionRepo;
         private ItemsRepo itemsRepo;
 
         private Builder() {
