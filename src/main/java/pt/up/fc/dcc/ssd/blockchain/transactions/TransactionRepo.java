@@ -23,7 +23,6 @@ public class TransactionRepo implements Repository {
 
     @Override
     public boolean put(Id key, byte[] byteArray) {
-        System.out.println("New Transaction!");
         Transaction transaction = (Transaction) toObject(byteArray);
         transactionsList.add(transaction);
         return true;

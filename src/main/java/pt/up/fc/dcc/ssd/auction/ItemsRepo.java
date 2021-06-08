@@ -15,7 +15,6 @@ public class ItemsRepo implements Repository, Serializable {
 
     @Override
     public boolean containsKey(Id key) {
-        System.out.println("contains?");
         return repo.containsKey(key);
     }
 
@@ -35,7 +34,6 @@ public class ItemsRepo implements Repository, Serializable {
             prev.add(byteArray);
             repo.put(key, prev);
         } else {
-            System.out.println("in the repo");
             List<byte[]> newTopicList = new ArrayList<>();
             newTopicList.add(byteArray);
             repo.put(key, newTopicList);

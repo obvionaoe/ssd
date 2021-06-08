@@ -71,7 +71,6 @@ public class ClientNode implements Serializable {
 
     //Generates and returns a new transaction from this wallet.
     public Transaction sendFunds(PublicKey _recipient, float value ) {
-        // TODO: handle this better
         if(getBalance() < value) { //gather balance and check funds.
             System.out.println("#Not Enough funds to send transaction. Transaction Discarded.");
             return null;

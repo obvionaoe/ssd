@@ -73,7 +73,6 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         // TODO: should have keepAlive time
         if (self.getItemsRepo().put(idFromBinaryString(data.getKey()), data.getValue().toByteArray())) {
             response.setStatus(ACCEPTED);
-            System.out.println("stored");
         } else {
             response.setStatus(FAILED);
         }

@@ -30,10 +30,8 @@ public class Miner {
                 // Make the while true loop less intense
                 sleep(60000);
                 if(!minerNode.kademlia.getTransactionRepo().transactionsList.isEmpty()){
-                    System.out.println("Received Transaction!!!");
                     Transaction newTransaction = minerNode.kademlia.getTransactionRepo().get();
                     minerNode.kademlia.getTransactionRepo().transactionsList.remove(newTransaction);
-                    System.out.println("Time to mine it!");
                     minerNode.mine(newTransaction);
                 }
             }
