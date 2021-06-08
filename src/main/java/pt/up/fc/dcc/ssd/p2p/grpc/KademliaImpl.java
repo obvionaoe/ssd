@@ -101,7 +101,7 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         byte[] data = request.getData().getValue().toByteArray();
 
 
-        self.getBlockchain().put(key, data);
+        self.getBlockchainRepo().put(key, data);
 
         List<Id> visitedIds = new ArrayList<>();
 
@@ -148,9 +148,12 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
 
         self.getRoutingTable().update(originConnectionInfo);
 
-        FindNodeResponse.Builder response = FindNodeResponse.newBuilder();
+        FindNodeResponse.Builder response = FindNodeResponse
+            .newBuilder();
 
-        if (infos != null) {
+        if (isNotNull(self.getBlockchain()))
+
+        if (isNotNull(infos)) {
             response.addAllConnectionInfos(infos.stream().map(DistancedConnectionInfo::toGrpcConnectionInfo).collect(Collectors.toList()));
         }
 

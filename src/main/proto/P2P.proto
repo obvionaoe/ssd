@@ -98,6 +98,7 @@ message BidResponse {
 
 message FindNodeResponse {
   repeated GrpcConnectionInfo connectionInfos = 1;
+  bytes additionalData = 2;
 }
 
 message FindValueResponse {

@@ -1,7 +1,7 @@
 package pt.up.fc.dcc.ssd.p2p.node;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.*;
+import java.io.Serializable;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -138,28 +138,5 @@ public class Id implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(bs);
-    }
-
-    // TESTING
-    public byte[] toByteArray() {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            ObjectOutputStream out = new ObjectOutputStream(bos);
-            out.writeObject(this);
-            out.flush();
-            return bos.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public static Id toObject(byte[] arr) {
-        ByteArrayInputStream bis = new ByteArrayInputStream(arr);
-        try (ObjectInput in = new ObjectInputStream(bis)) {
-            return (Id) in.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 }

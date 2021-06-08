@@ -9,6 +9,7 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.stub.StreamObserver;
 import pt.up.fc.dcc.ssd.auction.ItemsRepo;
+import pt.up.fc.dcc.ssd.blockchain.Blockchain;
 import pt.up.fc.dcc.ssd.blockchain.BlockchainRepo;
 import pt.up.fc.dcc.ssd.common.Pair;
 import pt.up.fc.dcc.ssd.p2p.Config;
@@ -20,13 +21,16 @@ import pt.up.fc.dcc.ssd.p2p.routing.exceptions.RoutingTableException;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static pt.up.fc.dcc.ssd.blockchain.Config.DIFFICULTY;
 import static pt.up.fc.dcc.ssd.common.Pair.cast;
+import static pt.up.fc.dcc.ssd.common.Serializable.toObject;
 import static pt.up.fc.dcc.ssd.common.Utils.isNotNull;
 import static pt.up.fc.dcc.ssd.common.Utils.isNull;
 import static pt.up.fc.dcc.ssd.p2p.Config.*;
@@ -45,15 +49,16 @@ public class KademliaNode {
     private ConnectionInfo connectionInfo;
     private final Server server;
     public final RoutingTable routingTable;
-    private final BlockchainRepo blockchain;
+    private final BlockchainRepo blockchainRepo;
     private final ItemsRepo itemsRepo;
+    private Blockchain blockchain;
     private boolean started;
 
     protected KademliaNode(Id id, String address, int port, SslContext sslContext) {
         this.id = id;
         this.address = address;
         routingTable = new RoutingTable(id);
-        this.blockchain = new BlockchainRepo();
+        this.blockchainRepo = new BlockchainRepo();
         this.itemsRepo = new ItemsRepo();
         ServerBuilder<?> sb = NettyServerBuilder.forPort(port).sslContext(sslContext);
         sb.addService(new KademliaImpl(this));
@@ -66,7 +71,7 @@ public class KademliaNode {
         this.id = id;
         this.address = address;
         routingTable = new RoutingTable(id);
-        this.blockchain = new BlockchainRepo();
+        this.blockchainRepo = new BlockchainRepo();
         this.itemsRepo = new ItemsRepo();
         ServerBuilder<?> sb = NettyServerBuilder.forPort(0).sslContext(sslContext);
         sb.addService(new KademliaImpl(this));
@@ -92,7 +97,7 @@ public class KademliaNode {
     public void start() throws IOException {
         if (!started) {
             server.start();
-            connectionInfo = new ConnectionInfo(id, address, server.getPort());
+            connectionInfo = new ConnectionInfo(id, address, server.getPort(), null, null);
             started = true;
         } else {
             logger.warning("This node has already been started!");
@@ -144,12 +149,16 @@ public class KademliaNode {
         return routingTable;
     }
 
-    public BlockchainRepo getBlockchain() {
-        return blockchain;
+    public BlockchainRepo getBlockchainRepo() {
+        return blockchainRepo;
     }
 
     public ItemsRepo getItemsRepo() {
         return itemsRepo;
+    }
+
+    public Blockchain getBlockchain() {
+        return blockchain;
     }
 
     /**
@@ -191,6 +200,9 @@ public class KademliaNode {
         }
 
         try {
+            Blockchain retrievedBlockchain = (Blockchain) toObject(pair.second().getAdditionalData().toByteArray());
+            blockchain = isNotNull(retrievedBlockchain) ? retrievedBlockchain : new Blockchain(DIFFICULTY);
+
             return addResultsAndPing(fromGrpcConnectionInfo(pair
                 .second()
                 .getConnectionInfosList())
@@ -267,15 +279,9 @@ public class KademliaNode {
 
     // TODO: redo this clusterfuck
     private boolean addResultsAndPing(List<DistancedConnectionInfo> connectionInfos) {
-        final boolean[] result = {true};
-        connectionInfos.forEach(info -> {
-            if (!routingTable.update(info.getId(), info.getConnectionInfo())) {
-                result[0] = false;
-            }
-        });
-        connectionInfos.forEach(info -> result[0] = ping(info.getId()));
-
-        return result[0];
+        final List<Boolean> result = new ArrayList<>();
+        connectionInfos.forEach(info -> result.add(routingTable.update(info.getId(), info.getConnectionInfo())));
+        return result.stream().anyMatch(bool -> bool);
     }
 
     /**
@@ -590,6 +596,23 @@ public class KademliaNode {
         } catch (RoutingTableException e) {
             logger.warning(e.getMessage());
         }
+    }
+
+    /**
+     * Calculates the newDistance based on the reliability values + the xorDistance as seen on the S/Kademlia paper
+     *
+     * @param nodeConnInfo the DistancedConnectionInfo of the node for which to calculate the newDistance
+     * @return the newDistance
+     */
+    private static BigInteger newDistance(DistancedConnectionInfo nodeConnInfo) {
+        return nodeConnInfo.getDistance()
+            .multiply(BALANCING_FACTOR)
+            .add(BigInteger.ONE
+                .subtract(BALANCING_FACTOR)
+                .multiply(BigInteger.ONE
+                    .divide(nodeConnInfo.getTrust())
+                )
+            );
     }
 
     /**
