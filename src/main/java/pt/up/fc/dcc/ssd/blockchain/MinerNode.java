@@ -32,8 +32,9 @@ public class MinerNode {
     }
 
     public void mine(Transaction transaction) {
-        double paymentForMiner = transaction.value*0.001;
-        transaction.value -= paymentForMiner;
+        // Transaction fee
+        //double paymentForMiner = transaction.value*0.001;
+        //transaction.value -= paymentForMiner;
 
         Blockchain blockchain = kademlia.getBlockchain();
         Block prev = blockchain.latestBlock();
@@ -52,7 +53,7 @@ public class MinerNode {
         blockchain.addBlock(newBlock);
 
         System.out.println("Successful mining! Going to share the mined block");
-        wallet += paymentForMiner;
+        //wallet += paymentForMiner;
 
         kademlia.gossip(
             toByteArray(newBlock),
