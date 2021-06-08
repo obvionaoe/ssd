@@ -18,7 +18,7 @@ public class Blockchain {
     public int difficulty = 1;
 
     public static final float minimumTransaction = 0.1f;
-    public static Map<String, TransactionOutput> UTXOs = new HashMap<String, TransactionOutput>();
+    public static Map<String, TransactionOutput> UTXOs = new HashMap<>();
     public static Transaction genesisTransaction;
     ClientNode genesis = new ClientNode("Genesis");
 

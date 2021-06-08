@@ -2,7 +2,6 @@ package pt.up.fc.dcc.ssd.auction;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import pt.up.fc.dcc.ssd.blockchain.Block;
-import pt.up.fc.dcc.ssd.blockchain.Blockchain;
 import pt.up.fc.dcc.ssd.blockchain.transactions.Transaction;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
@@ -70,7 +69,7 @@ public class Client {
             if (args[0].equals("GENESIS")) {
                 Block newBlock =
                     clientNode.kademlia.getBlockchain().MakeGenesisBuyer(clientNode, clientNode.kademlia.getBlockchain());
-                clientNode.kademlia.gossip(new Id(), toByteArray(newBlock), BLOCK);
+                clientNode.kademlia.gossip(toByteArray(newBlock), BLOCK);
             }
 
             System.out.println("From what topic do you want to buy?");
@@ -120,7 +119,6 @@ public class Client {
 
                 // Gossip da transação
                 clientNode.kademlia.gossip(
-                    new Id(),
                     toByteArray(transaction),
                     TRANSACTION
                 );

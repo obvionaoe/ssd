@@ -20,7 +20,6 @@ public class Serializable {
         try (ObjectInput in = new ObjectInputStream(bis)) {
             return in.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
             return null;
         }
     }

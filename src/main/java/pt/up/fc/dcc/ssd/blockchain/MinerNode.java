@@ -2,7 +2,6 @@ package pt.up.fc.dcc.ssd.blockchain;
 
 import pt.up.fc.dcc.ssd.blockchain.transactions.Transaction;
 import pt.up.fc.dcc.ssd.blockchain.transactions.TransactionRepo;
-import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 
 import javax.net.ssl.SSLException;
@@ -47,7 +46,6 @@ public class MinerNode {
         System.out.println("Successful mining! Going to share the mined block");
 
         kademlia.gossip(
-            new Id(),
             toByteArray(newBlock),
             BLOCK
         );

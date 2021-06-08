@@ -83,6 +83,15 @@ public class RpcCall {
         return this;
     }
 
+    public RpcCall withData(byte[] value) {
+        data = Data
+            .newBuilder()
+            .setValue(ByteString.copyFrom(value))
+            .build();
+
+        return this;
+    }
+
     public RpcCall withDataType(DataType dataType) {
         this.dataType = dataType;
         return this;
