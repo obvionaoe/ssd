@@ -545,17 +545,21 @@ public class KademliaNode {
                         info.getId().equals(visitedId)
                     )
                 );
+            } else {
+                visitedNodeIds = new ArrayList<>();
+                visitedNodeIds.add(id);
             }
 
             List<Pair<Status, GossipResponse>> responses = new ArrayList<>();
 
+            List<Id> finalVisitedNodeIds = visitedNodeIds;
             allConnectionInfos.forEach(destinationInfo ->
                 responses.add(cast(rpc(this)
                         .withDestConnInfo(destinationInfo)
                         .type(GOSSIP)
                         .withData(data)
                         .withDataType(dataType)
-                        .withVisitedIds(visitedNodeIds)
+                        .withVisitedIds(finalVisitedNodeIds)
                         .call(),
                     Status.class,
                     GossipResponse.class
