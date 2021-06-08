@@ -14,6 +14,8 @@ public class MinerNode {
     public KademliaNode kademlia;
     public TransactionRepo transactionRepo;
 
+    // TODO: give him money
+
     public MinerNode() throws SSLException, NoSuchAlgorithmException {
         transactionRepo = new TransactionRepo();
 
