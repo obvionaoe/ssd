@@ -23,7 +23,6 @@ public class ClientNode implements Serializable {
     public KademliaNode kademlia;
     public SellerItem item;
     public ItemsRepo itemsRepo = new ItemsRepo();
-    public TransactionRepo blockchainRepo;
 
     // Wallet
     public PublicKey pbk;

@@ -30,7 +30,7 @@ public class Blockchain implements Serializable {
         this.difficulty = difficulty;
         blockchain = new ArrayList<>();
 
-        Transaction genesisTransaction = new Transaction(genesis.pbk, genesis.pbk, 100f, null);
+        genesisTransaction = new Transaction(genesis.pbk, genesis.pbk, 100f, null);
         genesisTransaction.generateSignature(genesis.pvk);
         genesisTransaction.transactionId = "0";
         genesisTransaction.outputs.add(new TransactionOutput(genesisTransaction.recipient, genesisTransaction.value, genesisTransaction.transactionId));
@@ -66,14 +66,6 @@ public class Blockchain implements Serializable {
         return genesisBlock;
     }
 
-
-    //CREATE
-    /*public Block newBlock(String data) {
-        Block latestBlock = latestBlock();
-        return new Block(latestBlock.getIndex() + 1, System.currentTimeMillis(),
-            latestBlock.getHash(), data);
-    }*/
-
     //ADD e MINING
     public void addBlock(Block a) {
         if (a != null) {
@@ -82,7 +74,6 @@ public class Blockchain implements Serializable {
         }
     }
 
-    //LAST
     public Block latestBlock() {
         return blockchain.get(blockchain.size() - 1);
     }

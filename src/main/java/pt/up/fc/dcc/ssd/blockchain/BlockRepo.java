@@ -2,15 +2,21 @@ package pt.up.fc.dcc.ssd.blockchain;
 
 import pt.up.fc.dcc.ssd.common.Repository;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
+import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static pt.up.fc.dcc.ssd.blockchain.Utils.isChainValid;
 import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 import static pt.up.fc.dcc.ssd.common.Serializable.toObject;
 
 public class BlockRepo implements Repository {
-    List<Block> blockchain = new ArrayList<>();
+    Blockchain kadBlockchain;
+
+    public BlockRepo(Blockchain kadBlockchain){
+        this.kadBlockchain = kadBlockchain;
+    }
     @Override
     public boolean containsKey(Id key) {
         return false;
@@ -18,14 +24,14 @@ public class BlockRepo implements Repository {
 
     @Override
     public byte[] get(Id key) {
-        return toByteArray(blockchain);
+        return toByteArray(kadBlockchain);
     }
 
     @Override
     public boolean put(Id key, byte[] byteArray) {
-        // TODO: validate block
         Block newBlock = (Block) toObject(byteArray);
-        blockchain.add(newBlock);
+        kadBlockchain.addBlock(newBlock);
+        //isChainValid(self.getBlockchain());
         return false;
     }
 }

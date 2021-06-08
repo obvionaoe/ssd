@@ -31,9 +31,9 @@ public class Miner {
                 if(!minerNode.kademlia.getTransactionRepo().transactionsList.isEmpty()){
                     System.out.println("Received Transaction!!!");
                     Transaction newTransaction = minerNode.kademlia.getTransactionRepo().get();
-                    minerNode.kademlia.getTransactionRepo().transactionsList.remove(0);
+                    minerNode.kademlia.getTransactionRepo().transactionsList.remove(newTransaction);
                     System.out.println("Time to mine it!");
-                    minerNode.Mine(newTransaction);
+                    minerNode.mine(newTransaction);
                 }
             }
     }

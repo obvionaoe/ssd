@@ -61,7 +61,7 @@ public class Client {
 
             // Wait for biding
             System.out.println("Waiting for bids....");
-            sleep(3_600_000);
+            sleep(300000);
 
             System.out.println("You just got "+ clientNode.getBalance() + "!");
 
