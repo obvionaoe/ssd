@@ -101,7 +101,7 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         byte[] data = request.getData().getValue().toByteArray();
 
 
-        self.getBlockchainRepo().put(key, data);
+        self.getTransactionRepo().put(key, data);
 
         List<Id> visitedIds = new ArrayList<>();
 
