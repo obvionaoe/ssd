@@ -4,6 +4,7 @@ import pt.up.fc.dcc.ssd.common.Serializable;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 import pt.up.fc.dcc.ssd.p2p.node.NodeType;
+import pt.up.fc.dcc.ssd.p2p.routing.exceptions.RoutingTableException;
 
 import java.io.IOException;
 import java.util.stream.Collectors;
@@ -14,7 +15,7 @@ import static pt.up.fc.dcc.ssd.p2p.node.Id.idFromBinaryString;
 import static pt.up.fc.dcc.ssd.p2p.node.Id.idFromData;
 
 public class Example {
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException, RoutingTableException {
         System.out.println("KademliaNode Example:\n");
 
         // by giving this node the BOOTSTRAP_NODE type we give him a specific ID
@@ -77,6 +78,7 @@ public class Example {
         System.out.println("node2 bootstrapped! true == " + node2.bootstrap());
         System.out.println("node3 bootstrapped! true == " + node3.bootstrap());
 
+        System.out.println(bootstrapNode.getRoutingTable().findClosest(new Id()));
         System.out.println();
 
         System.out.println("node1: ping(node2) -> true == " + node1.ping(node2.getId()));

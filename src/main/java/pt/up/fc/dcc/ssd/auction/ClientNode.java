@@ -27,7 +27,7 @@ public class ClientNode {
     // Wallet
     public PublicKey pbk;
     public PrivateKey pvk;
-    public HashMap<String, TransactionOutput> UTXOs = new HashMap<String,TransactionOutput>(); //only UTXOs owned by this wallet.
+    public HashMap<String, TransactionOutput> UTXOs = new HashMap<>(); //only UTXOs owned by this wallet.
 
 
     public ClientNode(String role) throws SSLException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {

@@ -16,6 +16,7 @@ public class BlockRepo implements Repository {
 
     @Override
     public boolean put(Id key, byte[] byteArray) {
+        // TODO: Quando implementares caga no Id key
         return false;
     }
 }

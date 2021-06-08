@@ -17,6 +17,7 @@ public class TransactionRepo implements Repository {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public byte[] get(Id key) {
         return new byte[0];
     }

@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import static io.grpc.Status.INTERNAL;
 import static io.grpc.Status.INVALID_ARGUMENT;
+import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 import static pt.up.fc.dcc.ssd.common.Utils.isNotNull;
 import static pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo.fromGrpcConnectionInfo;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.*;
@@ -97,17 +98,16 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         );
         responseObserver.onCompleted();
 
-        Id key = idFromBinaryString(request.getData().getKey());
         byte[] data = request.getData().getValue().toByteArray();
         DataType dataType = request.getDataType();
 
-        self.getRepo(dataType).put(key, data);
+        self.getRepo(dataType).put(new Id(), data);
 
         List<Id> visitedIds = new ArrayList<>();
 
         request.getVisitedNodeIdsList().forEach(string -> visitedIds.add(idFromBinaryString(string)));
 
-        self.gossip(key, data, visitedIds, dataType);
+        self.gossip(data, visitedIds, dataType);
     }
 
     @Override
@@ -151,7 +151,13 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         FindNodeResponse.Builder response = FindNodeResponse
             .newBuilder();
 
-        if (isNotNull(self.getBlockchain()))
+        if (isNotNull(self.getBlockchain())) {
+            byte[] byteBlockchain = toByteArray(self.getBlockchain());
+
+            if (isNotNull(byteBlockchain)) {
+                response.setAdditionalData(ByteString.copyFrom(byteBlockchain));
+            }
+        }
 
         if (isNotNull(infos)) {
             response.addAllConnectionInfos(infos.stream().map(DistancedConnectionInfo::toGrpcConnectionInfo).collect(Collectors.toList()));

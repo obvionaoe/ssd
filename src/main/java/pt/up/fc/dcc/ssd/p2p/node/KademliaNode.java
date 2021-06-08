@@ -233,8 +233,13 @@ public class KademliaNode {
         }
 
         try {
-            Blockchain retrievedBlockchain = (Blockchain) toObject(pair.second().getAdditionalData().toByteArray());
-            blockchain = isNotNull(retrievedBlockchain) ? retrievedBlockchain : new Blockchain(DIFFICULTY);
+            try {
+                Blockchain retrievedBlockchain = (Blockchain) toObject(pair.second().getAdditionalData().toByteArray());
+                blockchain = isNotNull(retrievedBlockchain) ? retrievedBlockchain : new Blockchain(DIFFICULTY);
+            } catch (SSLException | NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
+                e.printStackTrace();
+                return false;
+            }
 
             return addResultsAndPing(fromGrpcConnectionInfo(pair
                 .second()
@@ -247,9 +252,6 @@ public class KademliaNode {
                 logger.warning(e.getMessage() + e.getStatus().getCode());
             }
 
-            return false;
-        } catch (SSLException | NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
-            e.printStackTrace();
             return false;
         }
     }
@@ -316,7 +318,12 @@ public class KademliaNode {
     private boolean addResultsAndPing(List<DistancedConnectionInfo> connectionInfos) {
         final List<Boolean> result = new ArrayList<>();
         connectionInfos.forEach(info -> result.add(routingTable.update(info.getId(), info.getConnectionInfo())));
-        return result.stream().anyMatch(bool -> bool);
+
+        if (connectionInfos.size() > 0) {
+            return result.stream().anyMatch(bool -> bool);
+        } else {
+            return true;
+        }
     }
 
     /**
@@ -512,23 +519,21 @@ public class KademliaNode {
     /**
      * Passes the given data to all the nodes on the network
      *
-     * @param dataId the id of the data to gossip
      * @param data   the data to gossip
      * @return true if at least one node accepted the request, false otherwise
      */
-    public boolean gossip(Id dataId, byte[] data, DataType dataType) {
-        return gossip(dataId, data, null, dataType);
+    public boolean gossip(byte[] data, DataType dataType) {
+        return gossip( data, null, dataType);
     }
 
     /**
      * Passes the given data to all the nodes on the network
      *
-     * @param dataId         the id of the data to gossip
      * @param data           the data to gossip
      * @param visitedNodeIds list of Ids of the already visited nodes
      * @return true if at least one node accepted the request, false otherwise
      */
-    public boolean gossip(Id dataId, byte[] data, List<Id> visitedNodeIds, DataType dataType) {
+    public boolean gossip(byte[] data, List<Id> visitedNodeIds, DataType dataType) {
         try {
             List<DistancedConnectionInfo> allConnectionInfos = routingTable.getAll();
 
@@ -546,7 +551,7 @@ public class KademliaNode {
                 responses.add(cast(rpc(this)
                         .withDestConnInfo(destinationInfo)
                         .type(GOSSIP)
-                        .withData(dataId, data)
+                        .withData(data)
                         .withDataType(dataType)
                         .withVisitedIds(visitedNodeIds)
                         .call(),
