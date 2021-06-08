@@ -19,7 +19,7 @@ public class Blockchain implements Serializable {
     public int difficulty = 1;
 
     public static final float minimumTransaction = 0.1f;
-    public static Map<String, TransactionOutput> UTXOs = new HashMap<>();
+    public static Map<String, TransactionOutput> UnspentTransactions = new HashMap<String, TransactionOutput>();
     public static Transaction genesisTransaction;
     ClientNode genesis = new ClientNode("Genesis");
 
@@ -32,7 +32,7 @@ public class Blockchain implements Serializable {
         genesisTransaction.transactionId = "0";
         genesisTransaction.outputs.add(new TransactionOutput(genesisTransaction.recipient, genesisTransaction.value, genesisTransaction.transactionId));
 
-        UTXOs.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
+        UnspentTransactions.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
 
         System.out.println("Creating and Mining Genesis block... ");
         Block genesisBlock = new Block(0, System.currentTimeMillis(), "0", new ArrayList<>());
@@ -48,7 +48,7 @@ public class Blockchain implements Serializable {
         genesisTransaction.transactionId = "0";
         genesisTransaction.outputs.add(new TransactionOutput(genesisTransaction.recipient, genesisTransaction.value, genesisTransaction.transactionId));
 
-        UTXOs.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
+        UnspentTransactions.put(genesisTransaction.outputs.get(0).id, genesisTransaction.outputs.get(0));
 
         System.out.println("Giving 100.0 to genesis buyer ;) ");
         Block prev = prevBlockchain.latestBlock();

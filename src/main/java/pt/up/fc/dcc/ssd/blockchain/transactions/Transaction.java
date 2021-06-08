@@ -39,7 +39,7 @@ public class Transaction implements Serializable {
 
         //Gathers transaction inputs (Making sure they are unspent):
         for (TransactionInput i : inputs) {
-            i.UTXO = Blockchain.UTXOs.get(i.transactionOutputId);
+            i.UnspentTransactionsOutput = Blockchain.UnspentTransactions.get(i.transactionOutputId);
         }
 
         //Checks if transaction is valid:
@@ -57,13 +57,13 @@ public class Transaction implements Serializable {
 
         //Add outputs to Unspent list
         for (TransactionOutput o : outputs) {
-            Blockchain.UTXOs.put(o.id, o);
+            Blockchain.UnspentTransactions.put(o.id, o);
         }
 
         //Remove transaction inputs from UTXO lists as spent:
         for (TransactionInput i : inputs) {
-            if (i.UTXO == null) continue; //if Transaction can't be found skip it
-            Blockchain.UTXOs.remove(i.UTXO.id);
+            if (i.UnspentTransactionsOutput == null) continue; //if Transaction can't be found skip it
+            Blockchain.UnspentTransactions.remove(i.UnspentTransactionsOutput.id);
         }
 
         return true;
@@ -72,8 +72,8 @@ public class Transaction implements Serializable {
     public float getInputsValue() {
         float total = 0;
         for (TransactionInput i : inputs) {
-            if (i.UTXO == null) continue; //if Transaction can't be found skip it
-            total += i.UTXO.value;
+            if (i.UnspentTransactionsOutput == null) continue; //if Transaction can't be found skip it
+            total += i.UnspentTransactionsOutput.value;
         }
         return total;
     }

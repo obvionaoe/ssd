@@ -116,7 +116,7 @@ public class Client {
             );
 
             if (accepted) {
-                System.out.println("\nBuyer is Attempting to send funds" + bid + " to Seller...");
+                System.out.println("\nBuyer is to send funds" + bid + " to Seller...");
 
                 Transaction transaction = clientNode.sendFunds(clientNode.item.sellerPbk, bid);
 

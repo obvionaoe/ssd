@@ -9,6 +9,7 @@ import pt.up.fc.dcc.ssd.blockchain.transactions.TransactionRepo;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 
 import javax.net.ssl.SSLException;
+import java.io.Serializable;
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ import java.util.Map;
 
 import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 
-public class ClientNode {
+public class ClientNode implements Serializable {
     public String role;
     public KademliaNode kademlia;
     public SellerItem item;
@@ -59,7 +60,7 @@ public class ClientNode {
         Blockchain blockchain = kademlia.getBlockchain();
         float total = 0;
         //Blockchain blockchain = (Blockchain) toObject(blockchainRepo.get( ? ??));
-        for (Map.Entry<String, TransactionOutput> item : blockchain.UTXOs.entrySet()) {
+        for (Map.Entry<String, TransactionOutput> item : blockchain.UnspentTransactions.entrySet()) {
             TransactionOutput UTXO = item.getValue();
             if (UTXO.isMine(pbk)) { //if output belongs to me ( if coins belong to me )
                 UTXOs.put(UTXO.id, UTXO); //add it to our list of unspent transactions.
