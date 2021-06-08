@@ -51,7 +51,7 @@ public class KBucket {
         return nodeMap.containsKey(id);
     }
 
-    protected static BigInteger distance(Id x, Id y) throws InvalidDistanceException {
+    protected static BigInteger xorDistance(Id x, Id y) throws InvalidDistanceException {
         Id clone = x.copy();
         clone.xor(y);
 
@@ -69,7 +69,7 @@ public class KBucket {
             if (isNull(destId))
                 return new DistancedConnectionInfo(connectionInfo, BigInteger.ZERO);
 
-            return new DistancedConnectionInfo(connectionInfo, distance(connectionInfo.getId(), destId));
+            return new DistancedConnectionInfo(connectionInfo, xorDistance(connectionInfo.getId(), destId));
         } catch (InvalidDistanceException e) {
             return null;
         }

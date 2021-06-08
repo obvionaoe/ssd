@@ -55,7 +55,7 @@ public class RoutingTable {
     }
 
     public static BigInteger distance(Id x, Id y) throws InvalidDistanceException {
-        return KBucket.distance(x, y);
+        return KBucket.xorDistance(x, y);
     }
 
     private int findBucket(Id destinationId) throws RoutingTableException {

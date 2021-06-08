@@ -2,6 +2,7 @@ package pt.up.fc.dcc.ssd.p2p;
 
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import static pt.up.fc.dcc.ssd.p2p.node.Id.idFromBinaryString;
@@ -23,4 +24,14 @@ public class Config {
     );
     public static final String BOOTSTRAP_NODE_ADDR = "localhost";
     public static final int BOOTSTRAP_NODE_PORT = 50001;
+
+    // S/KADEMLIA
+    public static final BigInteger BALANCING_FACTOR = BigDecimal.valueOf(0.6).toBigInteger();
+    public static final long TRUST_TIMER_MILLIS = 86_400_000L;
+
+    // weights
+    public static final BigInteger JOINING_W_Rr = BigInteger.ONE;
+    public static final BigInteger OLD_W_Rr = BigDecimal.valueOf(0.5).toBigInteger();
+    public static final BigInteger JOINING_W_Re = BigInteger.ZERO;
+    public static final BigInteger OLD_W_Re = BigDecimal.valueOf(0.5).toBigInteger();
 }

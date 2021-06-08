@@ -2,17 +2,35 @@ package pt.up.fc.dcc.ssd.p2p.conn;
 
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
+import java.math.BigInteger;
+import java.util.Date;
 import java.util.Objects;
 
 public class ConnectionInfo {
     private final Id id;
     private final String address;
     private final int port;
+    private BigInteger trust;
+    private BigInteger risk;
+    private int numberOfInteractions;
+    private Date joiningDate;
 
     public ConnectionInfo(Id id, String address, int port) {
         this.id = id;
         this.address = address;
         this.port = port;
+        this.trust = null;
+        this.risk = null;
+        this.numberOfInteractions = 0;
+    }
+
+    public ConnectionInfo(Id id, String address, int port, BigInteger risk, BigInteger trust) {
+        this.id = id;
+        this.address = address;
+        this.port = port;
+        this.trust = trust;
+        this.risk = risk;
+        this.numberOfInteractions = 0;
     }
 
     public Id getId() {
@@ -25,6 +43,26 @@ public class ConnectionInfo {
 
     public int getPort() {
         return port;
+    }
+
+    public BigInteger getTrust() {
+        return trust;
+    }
+
+    public void changeTrust(BigInteger change) {
+        trust = trust.add(change);
+    }
+
+    public BigInteger getRisk() {
+        return trust;
+    }
+
+    public void changeRisk(BigInteger change) {
+        trust = trust.add(change);
+    }
+
+    protected BigInteger reliabilityFactor() {
+        BigInteger wRr = joiningDate.
     }
 
     public DistancedConnectionInfo toDistancedConnectionInfo() {

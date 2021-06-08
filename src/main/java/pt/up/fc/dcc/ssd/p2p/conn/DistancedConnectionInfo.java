@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static pt.up.fc.dcc.ssd.p2p.Config.BALANCING_FACTOR;
+
 public class DistancedConnectionInfo {
     private final ConnectionInfo connectionInfo;
     private BigInteger distance;
@@ -44,6 +46,36 @@ public class DistancedConnectionInfo {
 
     public void setDistance(BigInteger distance) {
         this.distance = distance;
+    }
+
+    public BigInteger getTrust() {
+        return connectionInfo.getTrust();
+    }
+    public void changeTrust(BigInteger change) {
+        connectionInfo.changeTrust(change);
+    }
+
+    public BigInteger getRisk() {
+        return connectionInfo.getRisk();
+    }
+    public void changeRisk(BigInteger change) {
+        connectionInfo.changeRisk(change);
+    }
+
+    /**
+     * Calculates the newDistance based on the reliability values + the xorDistance as seen on the S/Kademlia paper
+     *
+     * @return the newDistance
+     */
+    public BigInteger newDistance() {
+        return getDistance()
+            .multiply(BALANCING_FACTOR)
+            .add(BigInteger.ONE
+                .subtract(BALANCING_FACTOR)
+                .multiply(BigInteger.ONE
+                    .divide(TRUST_FACTOR.test(getTrust(), getRisk()))
+                )
+            );
     }
 
     public GrpcConnectionInfo toGrpcConnectionInfo() {
