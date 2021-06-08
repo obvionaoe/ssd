@@ -131,6 +131,7 @@ enum DataType {
   BLOCK = 0;
   TOPIC = 1;
   BID = 2;
+  TRANSACTION = 3;
 }
 
 enum Status {

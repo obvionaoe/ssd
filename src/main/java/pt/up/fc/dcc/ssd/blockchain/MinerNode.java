@@ -1,14 +1,17 @@
 package pt.up.fc.dcc.ssd.blockchain;
 
+import pt.up.fc.dcc.ssd.blockchain.transactions.Transaction;
+import pt.up.fc.dcc.ssd.blockchain.transactions.TransactionRepo;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 
 import javax.net.ssl.SSLException;
-import java.security.*;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
+import static pt.up.fc.dcc.ssd.p2p.grpc.DataType.BLOCK;
 
 public class MinerNode {
     public KademliaNode kademlia;
@@ -24,7 +27,7 @@ public class MinerNode {
             .build();
     }
 
-    public void Mine(Transaction transaction){
+    public void Mine(Transaction transaction) {
         Blockchain blockchain = kademlia.getBlockchain();
         Block prev = blockchain.latestBlock();
         List<Transaction> transactions = new ArrayList<>();
@@ -44,8 +47,9 @@ public class MinerNode {
         System.out.println("Successful mining! Going to share the mined block");
 
         kademlia.gossip(
-                new Id(),
-                toByteArray(newBlock)
+            new Id(),
+            toByteArray(newBlock),
+            BLOCK
         );
     }
 

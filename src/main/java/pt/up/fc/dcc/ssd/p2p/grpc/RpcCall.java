@@ -177,6 +177,7 @@ public class RpcCall {
                         )
                         .addAllVisitedNodeIds(visitedList)
                         .setData(data)
+                        .setDataType(dataType)
                         .build()
                     );
 

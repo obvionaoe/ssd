@@ -1,5 +1,7 @@
 package pt.up.fc.dcc.ssd.blockchain;
 
+import pt.up.fc.dcc.ssd.blockchain.transactions.Transaction;
+
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.ArrayList;

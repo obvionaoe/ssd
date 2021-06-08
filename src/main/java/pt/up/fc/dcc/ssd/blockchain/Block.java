@@ -1,6 +1,6 @@
 package pt.up.fc.dcc.ssd.blockchain;
 
-import io.grpc.netty.shaded.io.netty.util.internal.StringUtil;
+import pt.up.fc.dcc.ssd.blockchain.transactions.Transaction;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package pt.up.fc.dcc.ssd.blockchain;
+package pt.up.fc.dcc.ssd.blockchain.transactions;
 
 import pt.up.fc.dcc.ssd.common.Repository;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
@@ -16,6 +16,7 @@ public class TransactionRepo implements Repository {
         return false;
     }
 
+    @Override
     public byte[] get(Id key) {
         return new byte[0];
     }

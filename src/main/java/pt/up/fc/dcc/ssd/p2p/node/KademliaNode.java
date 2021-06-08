@@ -9,9 +9,11 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.stub.StreamObserver;
 import pt.up.fc.dcc.ssd.auction.ItemsRepo;
+import pt.up.fc.dcc.ssd.blockchain.BlockRepo;
 import pt.up.fc.dcc.ssd.blockchain.Blockchain;
-import pt.up.fc.dcc.ssd.blockchain.TransactionRepo;
+import pt.up.fc.dcc.ssd.blockchain.transactions.TransactionRepo;
 import pt.up.fc.dcc.ssd.common.Pair;
+import pt.up.fc.dcc.ssd.common.Repository;
 import pt.up.fc.dcc.ssd.p2p.Config;
 import pt.up.fc.dcc.ssd.p2p.conn.ConnectionInfo;
 import pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo;
@@ -37,7 +39,9 @@ import static pt.up.fc.dcc.ssd.common.Utils.isNotNull;
 import static pt.up.fc.dcc.ssd.common.Utils.isNull;
 import static pt.up.fc.dcc.ssd.p2p.Config.*;
 import static pt.up.fc.dcc.ssd.p2p.conn.DistancedConnectionInfo.fromGrpcConnectionInfo;
+import static pt.up.fc.dcc.ssd.p2p.grpc.DataType.*;
 import static pt.up.fc.dcc.ssd.p2p.grpc.RpcCall.rpc;
+import static pt.up.fc.dcc.ssd.p2p.grpc.RpcType.BID;
 import static pt.up.fc.dcc.ssd.p2p.grpc.RpcType.*;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.*;
 import static pt.up.fc.dcc.ssd.p2p.node.NodeType.NODE;
@@ -53,6 +57,7 @@ public class KademliaNode {
     public final RoutingTable routingTable;
     private final TransactionRepo transactionRepo;
     private final ItemsRepo itemsRepo;
+    private final BlockRepo blockRepo;
     private Blockchain blockchain;
     private boolean started;
 
@@ -62,6 +67,7 @@ public class KademliaNode {
         routingTable = new RoutingTable(id);
         this.transactionRepo = new TransactionRepo();
         this.itemsRepo = new ItemsRepo();
+        this.blockRepo = new BlockRepo();
         ServerBuilder<?> sb = NettyServerBuilder.forPort(port).sslContext(sslContext);
         sb.addService(new KademliaImpl(this));
         server = sb.build();
@@ -75,6 +81,7 @@ public class KademliaNode {
         routingTable = new RoutingTable(id);
         this.transactionRepo = new TransactionRepo();
         this.itemsRepo = new ItemsRepo();
+        this.blockRepo = new BlockRepo();
         ServerBuilder<?> sb = NettyServerBuilder.forPort(0).sslContext(sslContext);
         sb.addService(new KademliaImpl(this));
         server = sb.build();
@@ -96,11 +103,22 @@ public class KademliaNode {
      *
      * @throws IOException if there's a problem while starting this node
      */
-    public void start() throws IOException {
+    public void start() throws IOException, InterruptedException {
         if (!started) {
             server.start();
             connectionInfo = new ConnectionInfo(id, address, server.getPort());
             started = true;
+            // makes the server wait for the JVM shutdown to quit, in most cases (Ctrl+C)
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                System.err.println("NODE[STATUS]: SHUTTING DOWN...");
+                try {
+                    this.stop();
+                } catch (InterruptedException e) {
+                    e.printStackTrace(System.err);
+                }
+                System.err.println("NODE[STATUS]: SHUT DOWN");
+            }));
+            server.awaitTermination();
         } else {
             logger.warning("This node has already been started!");
         }
@@ -498,8 +516,8 @@ public class KademliaNode {
      * @param data   the data to gossip
      * @return true if at least one node accepted the request, false otherwise
      */
-    public boolean gossip(Id dataId, byte[] data) {
-        return gossip(dataId, data, null);
+    public boolean gossip(Id dataId, byte[] data, DataType dataType) {
+        return gossip(dataId, data, null, dataType);
     }
 
     /**
@@ -510,7 +528,7 @@ public class KademliaNode {
      * @param visitedNodeIds list of Ids of the already visited nodes
      * @return true if at least one node accepted the request, false otherwise
      */
-    public boolean gossip(Id dataId, byte[] data, List<Id> visitedNodeIds) {
+    public boolean gossip(Id dataId, byte[] data, List<Id> visitedNodeIds, DataType dataType) {
         try {
             List<DistancedConnectionInfo> allConnectionInfos = routingTable.getAll();
 
@@ -529,6 +547,7 @@ public class KademliaNode {
                         .withDestConnInfo(destinationInfo)
                         .type(GOSSIP)
                         .withData(dataId, data)
+                        .withDataType(dataType)
                         .withVisitedIds(visitedNodeIds)
                         .call(),
                     Status.class,
@@ -613,6 +632,10 @@ public class KademliaNode {
         } catch (RoutingTableException e) {
             logger.warning(e.getMessage());
         }
+    }
+
+    public Repository getRepo(DataType dataType) {
+        return dataType.equals(BLOCK) ? blockRepo : dataType.equals(TRANSACTION) ? transactionRepo : dataType.equals(TOPIC) ? itemsRepo : null;
     }
 
     /**

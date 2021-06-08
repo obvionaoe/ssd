@@ -1,6 +1,8 @@
 package pt.up.fc.dcc.ssd.blockchain;
 
 import pt.up.fc.dcc.ssd.auction.ClientNode;
+import pt.up.fc.dcc.ssd.blockchain.transactions.Transaction;
+import pt.up.fc.dcc.ssd.blockchain.transactions.TransactionOutput;
 
 import javax.net.ssl.SSLException;
 import java.security.InvalidAlgorithmParameterException;
@@ -8,7 +10,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Security;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Example {
 

@@ -2,7 +2,7 @@ package pt.up.fc.dcc.ssd.auction;
 
 import pt.up.fc.dcc.ssd.blockchain.Block;
 import pt.up.fc.dcc.ssd.blockchain.Blockchain;
-import pt.up.fc.dcc.ssd.blockchain.Transaction;
+import pt.up.fc.dcc.ssd.blockchain.transactions.Transaction;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 
 import java.nio.charset.StandardCharsets;
@@ -13,11 +13,14 @@ import java.util.logging.Logger;
 import static java.lang.Thread.sleep;
 import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 import static pt.up.fc.dcc.ssd.common.Serializable.toObject;
+import static pt.up.fc.dcc.ssd.p2p.grpc.DataType.BLOCK;
+import static pt.up.fc.dcc.ssd.p2p.grpc.DataType.TRANSACTION;
 
 public class Client {
     private static final Logger logger = Logger.getLogger(Client.class.getName());
     private static ClientNode clientNode;
-// TODO: Auction in loop
+
+    // TODO: Auction in loop
 // TODO: Exceptions handling
     public static void main(String[] args) throws Exception {
 
@@ -61,10 +64,10 @@ public class Client {
             sleep(3_600_000);
 
         } else {
-            if( args[1].equals("GENESIS")) {
-               Block newBlock =
-                       clientNode.kademlia.getBlockchain().MakeGenesisBuyer(clientNode, clientNode.kademlia.getBlockchain());
-                clientNode.kademlia.gossip(new Id(), toByteArray(newBlock));
+            if (args[0].equals("GENESIS")) {
+                Block newBlock =
+                    clientNode.kademlia.getBlockchain().MakeGenesisBuyer(clientNode, clientNode.kademlia.getBlockchain());
+                clientNode.kademlia.gossip(new Id(), toByteArray(newBlock), BLOCK);
             }
 
             System.out.println("From what topic do you want to buy?");
@@ -115,8 +118,9 @@ public class Client {
 
                 // Gossip da transação
                 clientNode.kademlia.gossip(
-                        new Id(),
-                        toByteArray(transaction)
+                    new Id(),
+                    toByteArray(transaction),
+                    TRANSACTION
                 );
             }
         }

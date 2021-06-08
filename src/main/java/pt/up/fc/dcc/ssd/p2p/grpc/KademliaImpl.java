@@ -99,15 +99,15 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
 
         Id key = idFromBinaryString(request.getData().getKey());
         byte[] data = request.getData().getValue().toByteArray();
+        DataType dataType = request.getDataType();
 
-
-        self.getTransactionRepo().put(key, data);
+        self.getRepo(dataType).put(key, data);
 
         List<Id> visitedIds = new ArrayList<>();
 
         request.getVisitedNodeIdsList().forEach(string -> visitedIds.add(idFromBinaryString(string)));
 
-        self.gossip(key, data, visitedIds);
+        self.gossip(key, data, visitedIds, dataType);
     }
 
     @Override
@@ -171,12 +171,13 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         Id key = idFromBinaryString(request.getKey());
 
         FindValueResponse.Builder response = FindValueResponse.newBuilder();
+        DataType dataType = request.getDataType();
 
-        if (self.getItemsRepo().containsKey(key)) {
+        if (self.getRepo(dataType).containsKey(key)) {
             Data data = Data
                 .newBuilder()
                 .setKey(request.getKey())
-                //.setValue(ByteString.copyFrom(self.getItemsRepo().get(key)))
+                .setValue(ByteString.copyFrom((byte[]) self.getRepo(dataType).get(key)))
                 .build();
 
             responseObserver.onNext(response
@@ -215,10 +216,10 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         Id key = idFromBinaryString(request.getTopic());
 
         FindItemsResponse.Builder response = FindItemsResponse.newBuilder();
-        System.out.println("in");
+        DataType dataType = request.getDataType();
 
-        if (self.getItemsRepo().containsKey(key)) {
-            if (isNotNull(self.getItemsRepo().get(key)))
+        if (self.getRepo(dataType).containsKey(key)) {
+            if (isNotNull(self.getRepo(dataType).get(key)))
                 responseObserver.onNext(response
                     .setStatus(FOUND)
                     .addAllItems(

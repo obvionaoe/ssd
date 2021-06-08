@@ -18,6 +18,8 @@ public class ItemsRepo implements Repository {
         return repo.containsKey(key);
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
     public List<byte[]> get(Id key) {
         if (repo.containsKey(key)) {
             return repo.get(key);
@@ -53,9 +55,6 @@ public class ItemsRepo implements Repository {
         String response = scan.nextLine();
         if (response.equals("Y")) {
             return true;
-        } else if (response.equals("N")) {
-            return false;
-        }
-        return true;
+        } else return !response.equals("N");
     }
 }

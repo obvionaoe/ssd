@@ -1,10 +1,13 @@
 package pt.up.fc.dcc.ssd.auction;
 
-import pt.up.fc.dcc.ssd.blockchain.*;
+import pt.up.fc.dcc.ssd.blockchain.Blockchain;
+import pt.up.fc.dcc.ssd.blockchain.transactions.Transaction;
+import pt.up.fc.dcc.ssd.blockchain.transactions.TransactionInput;
+import pt.up.fc.dcc.ssd.blockchain.transactions.TransactionOutput;
+import pt.up.fc.dcc.ssd.blockchain.transactions.TransactionRepo;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 
 import javax.net.ssl.SSLException;
-
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 import java.util.ArrayList;
@@ -12,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
-import static pt.up.fc.dcc.ssd.common.Serializable.toObject;
 
 public class ClientNode {
     public String role;

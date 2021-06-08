@@ -1,4 +1,7 @@
-package pt.up.fc.dcc.ssd.blockchain;
+package pt.up.fc.dcc.ssd.blockchain.transactions;
+
+import pt.up.fc.dcc.ssd.blockchain.Blockchain;
+import pt.up.fc.dcc.ssd.blockchain.Utils;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;

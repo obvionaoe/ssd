@@ -1,4 +1,4 @@
-package pt.up.fc.dcc.ssd.blockchain;
+package pt.up.fc.dcc.ssd.blockchain.transactions;
 
 public class TransactionInput {
     public String transactionOutputId; //Reference to TransactionOutputs -> transactionId

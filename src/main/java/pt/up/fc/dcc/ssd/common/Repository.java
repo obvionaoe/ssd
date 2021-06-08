@@ -12,6 +12,16 @@ public interface Repository {
     boolean containsKey(Id key);
 
     /**
+     * Gets the value for the provided Id if it has been stored in the Repository
+     *
+     * @param key the Id, topics: a hashed word; bids: a bid Id; Blockchain: a Block Id, etc.
+     * @return a byt[] containing the value
+     */
+    default <T> T get(Id key) {
+        return (T) new Object();
+    }
+
+    /**
      * Inserts a byte array in the repository with the provided key
      *
      * @param key       the Id

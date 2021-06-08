@@ -1,14 +1,11 @@
 package pt.up.fc.dcc.ssd.blockchain;
 
 import pt.up.fc.dcc.ssd.auction.Client;
-import pt.up.fc.dcc.ssd.auction.ClientNode;
-import pt.up.fc.dcc.ssd.p2p.node.Id;
+import pt.up.fc.dcc.ssd.blockchain.transactions.Transaction;
 
 import javax.net.ssl.SSLException;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Logger;
-
-import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 
 public class Miner {
 
@@ -20,13 +17,11 @@ public class Miner {
         MinerNode minerNode = null;
         try {
             minerNode = new MinerNode();
-        } catch (SSLException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
+        } catch (SSLException | NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
 
-        minerNode.kademlia.start();
+            minerNode.kademlia.start();
             minerNode.kademlia.bootstrap();
 
             while(true){

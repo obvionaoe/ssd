@@ -1,6 +1,9 @@
+import org.gradle.api.tasks.application.CreateStartScripts
+
 plugins {
     id 'java'
     id 'com.google.protobuf' version '0.8.15'
+    id 'application'
 }
 
 group 'pt.up.fc.dcc.ssd'
@@ -45,4 +48,34 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+startScripts.enabled = false
+
+task brokerServer(type: CreateStartScripts) {
+    mainClassName = 'pt.up.fc.dcc.ssd.blockchain.Miner'
+    applicationName = 'miner-node'
+    outputDir = new File(project.buildDir, 'tmp')
+    classpath = startScripts.classpath
+}
+
+task subscriberClient(type: CreateStartScripts) {
+    mainClassName = 'pt.up.fc.dcc.ssd.auction.Client'
+    applicationName = 'client-node'
+    outputDir = new File(project.buildDir, 'tmp')
+    classpath = startScripts.classpath
+}
+
+task publisherClient(type: CreateStartScripts) {
+    mainClassName = 'pt.up.fc.dcc.ssd.p2p.Bootstrap'
+    applicationName = 'bootstrap-node'
+    outputDir = new File(project.buildDir, 'tmp')
+    classpath = startScripts.classpath
+}
+
+applicationDistribution.into('bin') {
+    from(brokerServer)
+    from(subscriberClient)
+    from(publisherClient)
+    fileMode = 0755
 }
