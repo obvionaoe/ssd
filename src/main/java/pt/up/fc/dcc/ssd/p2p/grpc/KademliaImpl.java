@@ -151,11 +151,13 @@ public class KademliaImpl extends KademliaGrpc.KademliaImplBase {
         FindNodeResponse.Builder response = FindNodeResponse
             .newBuilder();
 
-        if (isNotNull(self.getBlockchain())) {
-            byte[] byteBlockchain = toByteArray(self.getBlockchain());
+        if (request.getDestId().equals(request.getOriginConnectionInfo().getId())) {
+            if (isNotNull(self.getBlockchain())) {
+                byte[] byteBlockchain = toByteArray(self.getBlockchain());
 
-            if (isNotNull(byteBlockchain)) {
-                response.setAdditionalData(ByteString.copyFrom(byteBlockchain));
+                if (isNotNull(byteBlockchain)) {
+                    response.setAdditionalData(ByteString.copyFrom(byteBlockchain));
+                }
             }
         }
 

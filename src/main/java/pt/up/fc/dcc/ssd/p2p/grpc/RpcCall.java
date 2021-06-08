@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import static pt.up.fc.dcc.ssd.common.Pair.pair;
 import static pt.up.fc.dcc.ssd.common.Utils.isNull;
+import static pt.up.fc.dcc.ssd.p2p.grpc.DataType.TOPIC;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.ACCEPTED;
 import static pt.up.fc.dcc.ssd.p2p.grpc.Status.FAILED;
 import static pt.up.fc.dcc.ssd.p2p.security.Ssl.loadClientTlsCredentials;
@@ -158,7 +159,7 @@ public class RpcCall {
                             .toDistancedConnectionInfo()
                             .toGrpcConnectionInfo()
                         ).setData(data)
-                        .setDataType(DataType.TOPIC)
+                        .setDataType(TOPIC)
                         .build()
                     );
 
@@ -256,6 +257,7 @@ public class RpcCall {
                             .toGrpcConnectionInfo()
                         )
                         .setTopic(idToFind.toBinaryString())
+                        .setDataType(TOPIC)
                         .build()
                     );
 

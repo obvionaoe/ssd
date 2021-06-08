@@ -256,6 +256,21 @@ public class KademliaNode {
         }
     }
 
+    private boolean addResultsAndPing(List<DistancedConnectionInfo> connectionInfos) {
+        final List<Boolean> result = new ArrayList<>();
+        connectionInfos.forEach(info -> {
+            if (ping(info.getId())) {
+                result.add(routingTable.update(info.getId(), info.getConnectionInfo()));
+            }
+        });
+
+        if (connectionInfos.size() > 0) {
+            return result.stream().anyMatch(bool -> bool);
+        } else {
+            return true;
+        }
+    }
+
     /**
      * Pings the node associated with the given ID in this node's routing table,
      * if the ID is not present in this node's routing table it calls {@link #findNode(Id)} for the given ID
@@ -312,17 +327,6 @@ public class KademliaNode {
         } catch (RoutingTableException e) {
             logger.warning(e.getMessage());
             return false;
-        }
-    }
-
-    private boolean addResultsAndPing(List<DistancedConnectionInfo> connectionInfos) {
-        final List<Boolean> result = new ArrayList<>();
-        connectionInfos.forEach(info -> result.add(routingTable.update(info.getId(), info.getConnectionInfo())));
-
-        if (connectionInfos.size() > 0) {
-            return result.stream().anyMatch(bool -> bool);
-        } else {
-            return true;
         }
     }
 

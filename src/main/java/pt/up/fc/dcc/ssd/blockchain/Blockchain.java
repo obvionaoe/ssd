@@ -5,6 +5,7 @@ import pt.up.fc.dcc.ssd.blockchain.transactions.Transaction;
 import pt.up.fc.dcc.ssd.blockchain.transactions.TransactionOutput;
 
 import javax.net.ssl.SSLException;
+import java.io.Serializable;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Blockchain {
+public class Blockchain implements Serializable {
 
     public ArrayList<Block> blockchain = new ArrayList<Block>();
     public int difficulty = 1;

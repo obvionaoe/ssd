@@ -1,5 +1,6 @@
 package pt.up.fc.dcc.ssd.p2p;
 
+import pt.up.fc.dcc.ssd.auction.SellerItem;
 import pt.up.fc.dcc.ssd.common.Serializable;
 import pt.up.fc.dcc.ssd.p2p.node.Id;
 import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
@@ -77,8 +78,6 @@ public class Example {
         System.out.println("node1: ping(node2) -> false == " + node1.ping(node2.getId()));
         System.out.println("node2 bootstrapped! true == " + node2.bootstrap());
         System.out.println("node3 bootstrapped! true == " + node3.bootstrap());
-
-        System.out.println(bootstrapNode.getRoutingTable().findClosest(new Id()));
         System.out.println();
 
         System.out.println("node1: ping(node2) -> true == " + node1.ping(node2.getId()));
@@ -98,10 +97,10 @@ public class Example {
 
         System.out.println("\nStore/FindValue Example:\n");
 
-        byte[] data = toByteArray("345");
-        Id key = idFromData(toByteArray("Numero"));
+        byte[] data = toByteArray(new SellerItem(node1.getId(), "Roupa", 5, "Calças", null));
+        Id key = idFromData(toByteArray("Roupa"));
 
-        System.out.println("node1: store(\"345\") true == " + node1.store(key, data));
+        System.out.println("node1: store(data) true == " + node1.store(key, data));
         System.out.println("node1: findItems(idFromData(\"345\")) = " + node1.findItems(key).stream().map(Serializable::toObject).collect(Collectors.toList()));
         System.out.println("node3: findItems(idFromData(\"345\")) = " + node3.findItems(key).stream().map(Serializable::toObject).collect(Collectors.toList()));
         System.out.println("bootstrapNode: findItems(idFromData(\"345\")) = " + bootstrapNode.findItems(key).stream().map(Serializable::toObject).collect(Collectors.toList()));
