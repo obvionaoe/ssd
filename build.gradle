@@ -40,7 +40,7 @@ dependencies {
     implementation 'io.grpc:grpc-netty-shaded:1.36.0'
     implementation 'io.grpc:grpc-protobuf:1.36.0'
     implementation 'io.grpc:grpc-stub:1.36.0'
-    implementation 'org.bouncycastle:bcprov-jdk15on:1.68'
+    implementation 'org.bouncycastle:bcpkix-jdk15on:1.68'
 }
 
 test {

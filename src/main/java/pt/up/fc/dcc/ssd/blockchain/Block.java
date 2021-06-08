@@ -16,11 +16,10 @@ public class Block {
 
     //Construtor do Bloco
     public Block(int index, long timestamp, String previousHash, List<Transaction> transactions) {
-
         this.index = index;
         this.timeStamp = timestamp; //new Date().getTime();
         this.previousHash = previousHash;
-        this.transactions= transactions;
+        this.transactions = transactions;
         this.nonce = 0;
         this.merkleRoot = merkleRoot;
         this.hash = calculateHash(this);
