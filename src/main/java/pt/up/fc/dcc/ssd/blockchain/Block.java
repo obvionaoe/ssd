@@ -11,16 +11,16 @@ public class Block {
     public String previousHash;
     public String merkleRoot;
     //private String data;
-    private List<Transaction> transactions = new ArrayList<Transaction>();
+    public List<Transaction> transactions = new ArrayList<Transaction>();
     private int nonce;
 
     //Construtor do Bloco
-    public Block(int index, long timestamp, String previousHash, String data) {
+    public Block(int index, long timestamp, String previousHash, List<Transaction> transactions) {
 
         this.index = index;
         this.timeStamp = timestamp; //new Date().getTime();
         this.previousHash = previousHash;
-        // this.data=data;
+        this.transactions= transactions;
         this.nonce = 0;
         this.merkleRoot = merkleRoot;
         this.hash = calculateHash(this);
@@ -74,11 +74,9 @@ public class Block {
     }
 
     public String mineBlock(int difficulty) {
-        nonce = 0;
 
         merkleRoot = Utils.getMerkleRoot(transactions);
-
-        while (!getHash().substring(nonce, difficulty).equals(Utils.zeros(difficulty))) {
+        while (!getHash().substring(0, difficulty).equals(Utils.zeros(difficulty))) {
             nonce++;
             hash = calculateHash(this);
         }

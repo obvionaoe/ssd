@@ -5,6 +5,7 @@ import pt.up.fc.dcc.ssd.p2p.node.KademliaNode;
 
 import javax.net.ssl.SSLException;
 import java.security.*;
+import java.util.ArrayList;
 
 import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 
@@ -25,15 +26,17 @@ public class MinerNode {
     public void Mine(Transaction transaction){
         System.out.println("Waiting for transaction to occur... ");
         Block prev = blockchain.latestBlock();
+
         Block newBlock = new Block(
-                prev.index,
+            prev.index,
             System.currentTimeMillis(),
             prev.previousHash,
-            "???" // TODO: what's data?
+            prev.transactions
         );
 
         newBlock.addTransaction(transaction);
         blockchain.addBlock(newBlock);
+
 
         // TODO: é assim?
         kademlia.store(

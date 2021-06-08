@@ -13,25 +13,23 @@ public class Blockchain {
     public static Map<String, TransactionOutput> UTXOs = new HashMap<String, TransactionOutput>();
     public static Transaction genesisTransaction;
 
-    //wallets
-    //Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-
     public Blockchain(int difficulty) {
         this.difficulty = difficulty;
         blockchain = new ArrayList<>();
 
-        Block genesis = new Block(0, System.currentTimeMillis(), null, "Genesis");
-        genesis.mineBlock(difficulty);
-        blockchain.add(genesis);
+        // TODO: Genesis deve ser feito à parte
+        //Block genesis = new Block(0, System.currentTimeMillis(), null, new ArrayList<>());
+        //genesis.mineBlock(difficulty);
+        //blockchain.add(genesis);
     }
 
 
     //CREATE
-    public Block newBlock(String data) {
+    /*public Block newBlock(String data) {
         Block latestBlock = latestBlock();
         return new Block(latestBlock.getIndex() + 1, System.currentTimeMillis(),
             latestBlock.getHash(), data);
-    }
+    }*/
 
     //ADD e MINING
     public void addBlock(Block a) {

@@ -8,13 +8,15 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
+import static java.lang.Thread.sleep;
 import static pt.up.fc.dcc.ssd.common.Serializable.toByteArray;
 import static pt.up.fc.dcc.ssd.common.Serializable.toObject;
 
 public class Client {
     private static final Logger logger = Logger.getLogger(Client.class.getName());
     private static ClientNode clientNode;
-
+// TODO: Auction in loop
+// TODO: Exceptions handling
     public static void main(String[] args) throws Exception {
 
         // Get Role
@@ -45,7 +47,7 @@ public class Client {
                 topic,
                 bid,
                 item);
-
+            System.out.println(clientNode.item.topicId);
             // Add item associated with topic Id to the network
             clientNode.kademlia.store(
                 clientNode.item.topicId,
@@ -54,8 +56,7 @@ public class Client {
 
             // Wait for biding
             System.out.println("Waiting for bids....");
-            while (true) {
-            }
+            sleep(3_600_000);
 
         } else {
             // TODO: List of topics
@@ -99,14 +100,14 @@ public class Client {
             );
 
             if (accepted) {
-                Transaction transaction = new Transaction(
-                    clientNode.pbk,
-                    clientNode.item.sellerPbk,
-                    bid,
-                    null
-                );
+                // TODO:
+                //System.out.println("\nBuyer's balance is: " + clientNode.getBalance());
+                System.out.println("\nBuyer is Attempting to send funds (40) to Seller...");
+                //Transaction transaction = clientNode.sendFunds(clientNode.item.sellerPbk, bid);
 
-                transaction.processTransaction();
+                // TODO: Gossip da transação
+
+                //transaction.processTransaction();
             }
         }
     }
